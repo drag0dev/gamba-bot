@@ -1,16 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+    "database/sql"
+    _ "github.com/lib/pq"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
 
 var Token string
+var HOST, USER, PASSWORD, DB_NAME_USERS string
+var db *sql.DB
 
 func init(){
     var err error
@@ -22,6 +27,10 @@ func init(){
     }
 
     Token = os.Getenv("DG_TOKEN")
+    HOST = os.Getenv("HOST")
+    USER = os.Getenv("USER")
+    PASSWORD = os.Getenv("PASSWORD")
+    DB_NAME_USERS = os.Getenv("DB_NAME_USERS")
 }
 
 func messageReply(s *discordgo.Session,m *discordgo.MessageCreate){
@@ -31,7 +40,17 @@ func messageReply(s *discordgo.Session,m *discordgo.MessageCreate){
 
     if m.Content == "!subscribe"{
         // mock response until db is made for storing subscribed users
-        s.ChannelMessageSend(m.ChannelID, m.Author.Username + " sucessfully subscribed!")
+        var insertStm = fmt.Sprintf(`INESRT INTO users (user_id) VALUES ('%s');`, m.Author.Username)
+        log.Print(insertStm)
+        _, err := db.Exec(insertStm)
+
+        if err != nil{
+            s.ChannelMessageSend(m.ChannelID ,"There was a problem subscribing user: " + m.Author.Username)
+            log.Printf("Problem inserting new user, %s\n", err)
+            return
+        }else{
+            s.ChannelMessageSend(m.ChannelID, m.Author.Username + " sucessfully subscribed!")
+        }
     }
 
     if m.Content == "!unsubscribe"{
@@ -40,6 +59,15 @@ func messageReply(s *discordgo.Session,m *discordgo.MessageCreate){
 }
 
 func main (){
+    var conninfo string = fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", HOST, USER, PASSWORD, DB_NAME_USERS)
+    var err error
+    db, err = sql.Open("postgres", conninfo)
+
+    if err != nil{
+        log.Printf("Problem opening connection do the db, %s\n", err)
+        return
+    }
+
     dgSession, err := discordgo.New("Bot " + Token)
     if err != nil{
         log.Printf("Error making a new session, %s\n", err)
