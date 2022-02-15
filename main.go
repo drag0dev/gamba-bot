@@ -10,8 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-
-var Session, _ = discordgo.New()
+var Token string
 
 func init(){
     var err error
@@ -22,12 +21,35 @@ func init(){
         return
     }
 
-    Session.Token = os.Getenv("DG_TOKEN")
+    Token = os.Getenv("DG_TOKEN")
+}
+
+func messageReply(s *discordgo.Session,m *discordgo.MessageCreate){
+    if m.Author.ID == s.State.User.ID{
+        return
+    }
+
+    if m.Content == "!subscribe"{
+        // mock response until db is made for storing subscribed users
+        s.ChannelMessageSend(m.ChannelID, m.Author.Username + " sucessfully subscribed!")
+    }
+
+    if m.Content == "!unsubscribe"{
+        s.ChannelMessageSend(m.ChannelID, m.Author.Username + " successfully unsubscribed!")
+    }
 }
 
 func main (){
-    var err error
-    err = Session.Open()
+    dgSession, err := discordgo.New("Bot " + Token)
+    if err != nil{
+        log.Printf("Error making a new session, %s\n", err)
+        return
+    }
+
+    dgSession.AddHandler(messageReply)
+    dgSession.Identify.Intents = discordgo.IntentsGuildMessages
+
+    err = dgSession.Open()
 
     if err != nil {
         log.Printf("Error opening connection to Discord. %s\n", err)
@@ -39,5 +61,6 @@ func main (){
     sc := make(chan os.Signal, 1)
     signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
     <-sc
-    Session.Close()
+
+   dgSession.Close()
 }
