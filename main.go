@@ -7,14 +7,15 @@ import (
 	"os/signal"
 	"syscall"
 
-    "database/sql"
-    _ "github.com/lib/pq"
+	"database/sql"
+	_ "github.com/lib/pq"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
 
 var Token string
-var HOST, USER, PASSWORD, DB_NAME_USERS string
+var DB_URL, DB_NAME_USERS string
 var db *sql.DB
 
 func init(){
@@ -27,41 +28,77 @@ func init(){
     }
 
     Token = os.Getenv("DG_TOKEN")
-    HOST = os.Getenv("HOST")
-    USER = os.Getenv("USER")
-    PASSWORD = os.Getenv("PASSWORD")
     DB_NAME_USERS = os.Getenv("DB_NAME_USERS")
+    DB_URL = os.Getenv("DB_URL")
 }
 
-func messageReply(s *discordgo.Session,m *discordgo.MessageCreate){
+func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate){
     if m.Author.ID == s.State.User.ID{
         return
     }
-
     if m.Content == "!subscribe"{
-        // mock response until db is made for storing subscribed users
-        var insertStm = fmt.Sprintf(`INESRT INTO users (user_id) VALUES ('%s');`, m.Author.Username)
-        log.Print(insertStm)
+        handleSubscribe(s, m)
+    }else if m.Content == "!unsubscribe"{
+        handleUnsubscribe(s, m)
+    }
+}
+
+func handleSubscribe(s *discordgo.Session, m *discordgo.MessageCreate){
+    var existsStm = fmt.Sprintf(`SELECT EXISTS (SELECT 1 FROM %s WHERE user_id='%s');`, DB_NAME_USERS, m.Author.ID)
+    var count bool
+
+    _ = db.QueryRow(existsStm).Scan(&count)
+    if !count{
+        var insertStm = fmt.Sprintf(`INSERT INTO %s("user_id") VALUES('%s');`, DB_NAME_USERS, m.Author.ID)
         _, err := db.Exec(insertStm)
 
         if err != nil{
-            s.ChannelMessageSend(m.ChannelID ,"There was a problem subscribing user: " + m.Author.Username)
-            log.Printf("Problem inserting new user, %s\n", err)
+            s.ChannelMessageSend(m.ChannelID ,"There was a problem subscribing user " + m.Author.Username)
+            log.Println(err)
+            return
+        }
+
+        s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s sucessfully subscribed!", m.Author.Username))
+
+    }else if count{
+        s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s already subscribed!", m.Author.Username))
+        return
+    }else{
+        s.ChannelMessageSend(m.ChannelID, "Internal error, please try again later!")
+        return
+    }
+}
+
+func handleUnsubscribe(s *discordgo.Session, m *discordgo.MessageCreate){
+    var existsStm string = fmt.Sprintf(`SELECT EXISTS (SELECT 1 FROM %s WHERE user_id='%s');`, DB_NAME_USERS, m.Author.ID)
+    var count bool
+
+    _ = db.QueryRow(existsStm).Scan(&count)
+
+    if !count{
+        s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Cannot unsubscribe user %s!", m.Author.Username))
+        return
+    }else if count{
+        var deleteStm string = fmt.Sprintf(`DELETE FROM %s WHERE user_id='%s';`, DB_NAME_USERS, m.Author.ID)
+        _, err := db.Exec(deleteStm)
+
+        if err != nil{
+            s.ChannelMessageSend(m.ChannelID, "Interal server erorr, please try again!")
             return
         }else{
-            s.ChannelMessageSend(m.ChannelID, m.Author.Username + " sucessfully subscribed!")
+            s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s has been unsubscribed!", m.Author.Username))
+            return
         }
-    }
 
-    if m.Content == "!unsubscribe"{
-        s.ChannelMessageSend(m.ChannelID, m.Author.Username + " successfully unsubscribed!")
+    }else{
+        s.ChannelMessageSend(m.ChannelID, "Internal error, please try again!")
+        return
     }
 }
 
 func main (){
-    var conninfo string = fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", HOST, USER, PASSWORD, DB_NAME_USERS)
     var err error
-    db, err = sql.Open("postgres", conninfo)
+    db, err = sql.Open("postgres", DB_URL)
 
     if err != nil{
         log.Printf("Problem opening connection do the db, %s\n", err)
@@ -74,7 +111,7 @@ func main (){
         return
     }
 
-    dgSession.AddHandler(messageReply)
+    dgSession.AddHandler(messageHandler)
     dgSession.Identify.Intents = discordgo.IntentsGuildMessages
 
     err = dgSession.Open()
