@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+    "drag0dev/gamba-bot/scrapers"
+
 	"database/sql"
 	_ "github.com/lib/pq"
 
@@ -119,6 +121,13 @@ func main (){
     if err != nil {
         log.Printf("Error opening connection to Discord. %s\n", err)
         os.Exit(1)
+    }
+
+    err = csgocases.Scrape(db)
+
+    if err != nil{
+        log.Print(err)
+        return
     }
 
     // don't know if i need this, will stay for now
