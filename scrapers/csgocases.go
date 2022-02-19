@@ -56,6 +56,25 @@ type tweetInfo struct{
     }                           `json:"includes"`
 }
 
+type ocrRes struct{
+    ParsedResults []struct{
+        TextOverlay struct{
+            Lines []string                  `json:"Lines"`
+            HasOverlay bool                 `json:"HasOverlay"`
+            Message string                  `json:"Message"`
+        }                                   `json:"TextOverlay"`
+        TextOrientation string              `json:"TextOrientation"`
+        FileParseExitCode int               `json:"FileParseExitCode"`
+        ParsedText string                   `json:"ParsedText"`
+        ErrorMessage string                 `json:"ErrorMessage"`
+        ErrorDetails string                 `json:"ErrorDetails"`
+    }                                       `json:"ParsedResults"`
+    OCRExitCode int                         `json:"OCRExitCode"`
+    IsErroredOnProcessing bool              `json:"IsErroredOnProcessing"`
+    ProcessingTimeInMilliseconds string     `json:"ProcessingTimeInMilliseconds"`
+    SearchablePDFURL string                 `json:"SearchablePDFURL"`
+}
+
 func getlastOldestId(db *sql.DB) (error, string) {
     var selectStm string = fmt.Sprintf("SELECT lastid FROM %s WHERE name='csgocases'", DB_NAME_WEBSITES)
 
@@ -69,9 +88,10 @@ func getlastOldestId(db *sql.DB) (error, string) {
     }
 }
 
-func getCodes(tweets []string) (error, []string){
+func getCodes(tweets []string) (error, [][]string){
     var imageURLs []string
-    var codes []string
+    var codes [][]string
+
     client := http.Client{}
 
     // grabbing urls
@@ -115,24 +135,61 @@ func getCodes(tweets []string) (error, []string){
         }
 
         body, err := ioutil.ReadAll(res.Body)
+
+        var ocrResponse ocrRes
+
+        // ocr sometimes fails and unmarshaling fails
+
+        err = json.Unmarshal([]byte(body), &ocrResponse)
         if err != nil{
             return err, nil
         }
 
-        log.Print(string(body))
-        log.Print(url)
-        log.Println("")
+        var parsedCode string = ocrResponse.ParsedResults[0].ParsedText
+        var code string = ""
 
+        splitParsedCode := strings.Split(parsedCode, "\r\n")
+        if len(splitParsedCode[2]) > 0{
+            code = splitParsedCode[2]
+        }
+
+        temp := []string{code, url}
+        codes = append(codes, temp)
     }
 
     return nil, codes
 }
 
-func Scrape(db *sql.DB) error {
+func addNewCodesToDB(db *sql.DB, codes [][]string) error{
+    for _, code := range codes{
+        var insertStm string = fmt.Sprintf(`INSERT INTO csgocases("code", "url") VALUES('%s', '%s');`, code[0], code[1])
+        _, err := db.Exec(insertStm)
+        if err != nil{
+            return err
+        }
+    }
+
+    return nil
+}
+
+func updateNewestId(db *sql.DB, id string) error{
+    log.Print("Updating new id")
+    var updateStm string = fmt.Sprintf(`UPDATE %s SET lastId = '%s' WHERE name = 'csgocases';`, DB_NAME_WEBSITES, id)
+
+    _, err := db.Exec(updateStm)
+
+    if err != nil{
+        return err
+    }
+
+    return nil
+}
+
+func Scrape(db *sql.DB) (error, [][]string) {
     err := godotenv.Load(".env")
     if err != nil{
         log.Print("Cannot load .env for scraper!")
-        return err
+        return err, nil
     }
     BASE_URL_TWITTER = os.Getenv("TWITTER_BASE_URL")
     BEARER_TOKEN = os.Getenv("BEARER_TOKEN")
@@ -140,10 +197,10 @@ func Scrape(db *sql.DB) error {
     BASE_URL_OCR = os.Getenv("OCR_BASE_URL")
     OCR_API_KEY = os.Getenv("OCR_API_KEY")
 
-    err, oldOldestId  := getlastOldestId(db)
+    err, oldNewestId  := getlastOldestId(db)
 
     if err != nil{
-        return err
+        return err, nil
     }
 
     // fetching tweets
@@ -152,7 +209,7 @@ func Scrape(db *sql.DB) error {
     req, err := http.NewRequest("get", BASE_URL_TWITTER + "users/" + CSGOCASES_ID + "/tweets?max_results=20", nil)
     if err != nil{
         log.Print("Problem with making a new request!")
-        return err
+        return err, nil
     }
 
     req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", BEARER_TOKEN))
@@ -160,14 +217,14 @@ func Scrape(db *sql.DB) error {
     res, err := client.Do(req)
     if err != nil{
         log.Printf("Failed to fetch csgocases, error: %s\n", err)
-        return err
+        return err, nil
     }
 
     body, err := ioutil.ReadAll(res.Body)
 
     if err != nil{
         log.Printf("Failed to parse body, error: %s\n", err)
-        return err
+        return err, nil
     }
 
     var resJSON resBody
@@ -175,12 +232,12 @@ func Scrape(db *sql.DB) error {
     err = json.Unmarshal([]byte(body), &resJSON)
 
     if err!=nil{
-        return err
+        return err, nil
     }
 
     // no new tweets
-    if resJSON.Meta.Oldest_id <= oldOldestId{
-        return nil
+    if resJSON.Meta.Newest_id <= oldNewestId{
+        return nil, nil
     }
 
     // going through new tweets
@@ -188,7 +245,7 @@ func Scrape(db *sql.DB) error {
     var tweetsIds []string
 
     for _, tweet := range tweets{
-        if tweet.Id <= oldOldestId{
+        if tweet.Id <= oldNewestId{
             break
         }
 
@@ -197,11 +254,27 @@ func Scrape(db *sql.DB) error {
         }
     }
 
-    err, _ = getCodes(tweetsIds)
-
-    if err != nil {
-        return err
+    if len(tweetsIds)==0{
+        return nil, nil
     }
 
-    return nil
+    err, codes := getCodes(tweetsIds)
+
+    if err != nil {
+        return err, nil
+    }
+
+    err = addNewCodesToDB(db, codes)
+
+    if err!=nil{
+        return err, nil
+    }
+
+    err = updateNewestId(db, resJSON.Meta.Newest_id)
+
+    if err != nil{
+        return err, nil
+    }
+
+    return nil, codes
 }

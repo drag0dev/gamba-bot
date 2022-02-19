@@ -123,7 +123,9 @@ func main (){
         os.Exit(1)
     }
 
-    err = csgocases.Scrape(db)
+    err, newCodes := csgocases.Scrape(db)
+
+    log.Print(newCodes)
 
     if err != nil{
         log.Print(err)
