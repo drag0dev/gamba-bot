@@ -7,11 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-    "drag0dev/gamba-bot/scrapers"
-
 	"database/sql"
 	_ "github.com/lib/pq"
 
+    "drag0dev/gamba-bot/concurrency"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
@@ -98,6 +97,7 @@ func handleUnsubscribe(s *discordgo.Session, m *discordgo.MessageCreate){
     }
 }
 
+
 func main (){
     var err error
     db, err = sql.Open("postgres", DB_URL)
@@ -123,14 +123,7 @@ func main (){
         os.Exit(1)
     }
 
-    err, newCodes := csgocases.Scrape(db)
-
-    log.Print(newCodes)
-
-    if err != nil{
-        log.Print(err)
-        return
-    }
+    go cCSGOCASES.StartCSGOCASES(db, dgSession)
 
     // don't know if i need this, will stay for now
     log.Printf(`Now running. Press CTRL-C to exit.`)

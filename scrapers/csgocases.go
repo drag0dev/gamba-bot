@@ -185,12 +185,16 @@ func updateNewestId(db *sql.DB, id string) error{
     return nil
 }
 
-func Scrape(db *sql.DB) (error, [][]string) {
+func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan bool) {
     err := godotenv.Load(".env")
     if err != nil{
         log.Print("Cannot load .env for scraper!")
-        return err, nil
+        errChan <- err
+        codesChan <- nil
+        done <- true
+        return
     }
+
     BASE_URL_TWITTER = os.Getenv("TWITTER_BASE_URL")
     BEARER_TOKEN = os.Getenv("BEARER_TOKEN")
     DB_NAME_WEBSITES = os.Getenv("DB_NAME_WEBSITES")
@@ -200,7 +204,9 @@ func Scrape(db *sql.DB) (error, [][]string) {
     err, oldNewestId  := getlastOldestId(db)
 
     if err != nil{
-        return err, nil
+        errChan <- err
+        done <- true
+        return
     }
 
     // fetching tweets
@@ -208,8 +214,9 @@ func Scrape(db *sql.DB) (error, [][]string) {
 
     req, err := http.NewRequest("get", BASE_URL_TWITTER + "users/" + CSGOCASES_ID + "/tweets?max_results=20", nil)
     if err != nil{
-        log.Print("Problem with making a new request!")
-        return err, nil
+        errChan <- err
+        done <- true
+        return
     }
 
     req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", BEARER_TOKEN))
@@ -217,14 +224,18 @@ func Scrape(db *sql.DB) (error, [][]string) {
     res, err := client.Do(req)
     if err != nil{
         log.Printf("Failed to fetch csgocases, error: %s\n", err)
-        return err, nil
+        errChan <- err
+        done <- true
+        return
     }
 
     body, err := ioutil.ReadAll(res.Body)
 
     if err != nil{
         log.Printf("Failed to parse body, error: %s\n", err)
-        return err, nil
+        errChan <- err
+        done <- true
+        return
     }
 
     var resJSON resBody
@@ -232,12 +243,18 @@ func Scrape(db *sql.DB) (error, [][]string) {
     err = json.Unmarshal([]byte(body), &resJSON)
 
     if err!=nil{
-        return err, nil
+        errChan <- err
+        done <- true
+        return
     }
+
 
     // no new tweets
     if resJSON.Meta.Newest_id <= oldNewestId{
-        return nil, nil
+        errChan <- nil
+        codesChan <- nil
+        done <- true
+        return
     }
 
     // going through new tweets
@@ -255,26 +272,41 @@ func Scrape(db *sql.DB) (error, [][]string) {
     }
 
     if len(tweetsIds)==0{
-        return nil, nil
+        errChan <- nil
+        codesChan <- nil
+        done <- true
+        return
     }
 
     err, codes := getCodes(tweetsIds)
 
     if err != nil {
-        return err, nil
+        log.Print("Error getting codes!")
+        errChan <- err
+        done <- true
+        return
     }
 
     err = addNewCodesToDB(db, codes)
 
     if err!=nil{
-        return err, nil
+        log.Print("Erorr adding new codes to the db!")
+        errChan <- err
+        done <- true
+        return
     }
 
     err = updateNewestId(db, resJSON.Meta.Newest_id)
 
     if err != nil{
-        return err, nil
+        log.Println("Error updating newest id")
+        errChan <- err
+        done <- true
+        return
     }
 
-    return nil, codes
+    errChan <- nil
+    codesChan <- codes
+    done <- true
+    return
 }
