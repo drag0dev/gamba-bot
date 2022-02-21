@@ -1,11 +1,12 @@
-package cCSGOCASES
+package conScraping
 
 import (
 	"database/sql"
-	"drag0dev/gamba-bot/scrapers"
+	"drag0dev/gamba-bot/scraping"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -14,7 +15,7 @@ import (
 
 var DB_NAME_USERS string
 
-func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errChan chan error) {
+func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errChan chan error, site string) {
     var selectStm string = fmt.Sprintf(`SELECT * from "%s";`, DB_NAME_USERS)
     rows, err := db.Query(selectStm)
 
@@ -50,7 +51,7 @@ func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errCha
             return
         }
         for _, code := range codes{
-            s.ChannelMessageSend(userChannel.ID, fmt.Sprintf("CSGOCASES CODE: %s (%s)", code[0], code[1]))
+            s.ChannelMessageSend(userChannel.ID, fmt.Sprintf("%s CODE: %s (%s)", strings.ToUpper(site), code[0], code[1]))
         }
     }
 
@@ -58,7 +59,7 @@ func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errCha
     return
 }
 
-func StartCSGOCASES (db *sql.DB, s *discordgo.Session){
+func StartScraping (db *sql.DB, s *discordgo.Session, website string){
     err := godotenv.Load(".env")
     if err != nil {
         log.Printf("Error opening .env file, %s\n", err)
@@ -68,26 +69,26 @@ func StartCSGOCASES (db *sql.DB, s *discordgo.Session){
     DB_NAME_USERS = os.Getenv("DB_NAME_USERS")
 
     for {
-        log.Print("Scraping csgocases")
+        log.Printf(`Scraping "%s"`, strings.ToUpper(website))
         cErr := make(chan error)
         cCodes := make(chan [][]string)
         cDone := make(chan bool)
         var errState bool = false
 
-        go csgocases.Scrape(db, cErr, cCodes, cDone)
+        go scraping.Scrape(db, cErr, cCodes, cDone, website)
 
+        done := <- cDone
         err := <- cErr
         codes := <- cCodes
-        done := <- cDone
 
         if err != nil{
-            log.Printf("csgocases scraper encountered error: %s", err)
+            log.Printf(`"%s" scraper encountered error: %s`,strings.ToUpper(website), err)
             errState = true
         }else if len(codes)>0 && done{
-            log.Println("Emitting codes")
+            log.Printf(`Emitting codes for "%s"`, strings.ToUpper(website))
             cEmittError := make(chan error)
 
-            go emitCodesToUsers(db, codes, s, cEmittError)
+            go emitCodesToUsers(db, codes, s, cEmittError, website)
 
             err := <- cEmittError
 
@@ -98,8 +99,10 @@ func StartCSGOCASES (db *sql.DB, s *discordgo.Session){
         }
 
         if !errState{ // if there was no error wait for 15minutes before next check
+            log.Printf(`Scraping successful for "%s", sleeping for 15min`, strings.ToUpper(website))
             time.Sleep(900 * time.Second)
         }else{
+            log.Printf(`Error getting codes for "%s", sleeping for 5min`, strings.ToUpper(website))
             time.Sleep(300 * time.Second) // if there was error wait 5 minutes before retrying
         }
     }

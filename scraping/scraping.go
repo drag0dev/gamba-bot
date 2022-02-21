@@ -1,4 +1,4 @@
-package csgocases
+package scraping
 
 import (
 	"database/sql"
@@ -17,7 +17,8 @@ import (
 var BASE_URL_TWITTER string
 var BEARER_TOKEN string
 var CSGOCASES_ID string = "943452686820761600"
-var DB_NAME_WEBSITES string
+var KEYDROP_ID string = "1271866668885643269"
+var DB_NAME_siteS string
 var BASE_URL_OCR string
 var OCR_API_KEY string
 
@@ -75,8 +76,8 @@ type ocrRes struct{
     SearchablePDFURL string                 `json:"SearchablePDFURL"`
 }
 
-func getlastOldestId(db *sql.DB) (error, string) {
-    var selectStm string = fmt.Sprintf("SELECT lastid FROM %s WHERE name='csgocases'", DB_NAME_WEBSITES)
+func getlastOldestId(db *sql.DB, website string) (error, string) {
+    var selectStm string = fmt.Sprintf("SELECT lastid FROM %s WHERE name='%s'", DB_NAME_siteS, website)
 
     var oldId string
 
@@ -160,9 +161,9 @@ func getCodes(tweets []string) (error, [][]string){
     return nil, codes
 }
 
-func addNewCodesToDB(db *sql.DB, codes [][]string) error{
+func addNewCodesToDB(db *sql.DB, codes [][]string, website string) error{
     for _, code := range codes{
-        var insertStm string = fmt.Sprintf(`INSERT INTO csgocases("code", "url") VALUES('%s', '%s');`, code[0], code[1])
+        var insertStm string = fmt.Sprintf(`INSERT INTO %s("code", "url") VALUES('%s', '%s');`, website, code[0], code[1])
         _, err := db.Exec(insertStm)
         if err != nil{
             return err
@@ -172,39 +173,39 @@ func addNewCodesToDB(db *sql.DB, codes [][]string) error{
     return nil
 }
 
-func updateNewestId(db *sql.DB, id string) error{
+func updateNewestId(db *sql.DB, id string, website string) error{
     log.Print("Updating new id")
-    var updateStm string = fmt.Sprintf(`UPDATE %s SET lastId = '%s' WHERE name = 'csgocases';`, DB_NAME_WEBSITES, id)
+    var updateStm string = fmt.Sprintf(`UPDATE %s SET lastId = '%s' WHERE name = '%s';`, DB_NAME_siteS, id, website)
 
     _, err := db.Exec(updateStm)
 
     if err != nil{
         return err
     }
-
     return nil
 }
 
-func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan bool) {
+func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan bool, site string) {
     err := godotenv.Load(".env")
     if err != nil{
         log.Print("Cannot load .env for scraper!")
         errChan <- err
-        codesChan <- nil
+        close(codesChan)
         done <- true
         return
     }
 
     BASE_URL_TWITTER = os.Getenv("TWITTER_BASE_URL")
     BEARER_TOKEN = os.Getenv("BEARER_TOKEN")
-    DB_NAME_WEBSITES = os.Getenv("DB_NAME_WEBSITES")
+    DB_NAME_siteS = os.Getenv("DB_NAME_WEBSITES")
     BASE_URL_OCR = os.Getenv("OCR_BASE_URL")
     OCR_API_KEY = os.Getenv("OCR_API_KEY")
 
-    err, oldNewestId  := getlastOldestId(db)
+    err, oldNewestId  := getlastOldestId(db, site)
 
     if err != nil{
         errChan <- err
+        close(codesChan)
         done <- true
         return
     }
@@ -212,9 +213,20 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     // fetching tweets
     client := http.Client{}
 
-    req, err := http.NewRequest("get", BASE_URL_TWITTER + "users/" + CSGOCASES_ID + "/tweets?max_results=20", nil)
+    var url string
+    if site == "csgocases"{
+        url = fmt.Sprintf(BASE_URL_TWITTER + "users/" + CSGOCASES_ID + "/tweets?max_results=20")
+    }else if site == "keydrop"{
+        url = fmt.Sprintf(BASE_URL_TWITTER + "users/" + KEYDROP_ID + "/tweets?max_results=20")
+    }else{
+        log.Print("Invalid website!")
+        return
+    }
+
+    req, err := http.NewRequest("get", url, nil)
     if err != nil{
         errChan <- err
+        close(codesChan)
         done <- true
         return
     }
@@ -223,8 +235,9 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
 
     res, err := client.Do(req)
     if err != nil{
-        log.Printf("Failed to fetch csgocases, error: %s\n", err)
+        log.Printf("Failed to fetch %s, error: %s\n", site, err)
         errChan <- err
+        close(codesChan)
         done <- true
         return
     }
@@ -234,6 +247,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     if err != nil{
         log.Printf("Failed to parse body, error: %s\n", err)
         errChan <- err
+        close(codesChan)
         done <- true
         return
     }
@@ -241,18 +255,17 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     var resJSON resBody
 
     err = json.Unmarshal([]byte(body), &resJSON)
-
     if err!=nil{
         errChan <- err
+        close(codesChan)
         done <- true
         return
     }
 
-
     // no new tweets
     if resJSON.Meta.Newest_id <= oldNewestId{
-        errChan <- nil
-        codesChan <- nil
+        close(errChan)
+        close(codesChan)
         done <- true
         return
     }
@@ -266,14 +279,16 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
             break
         }
 
-        if strings.Contains(tweet.Text, "promocode will get free $"){
+        if strings.Contains(tweet.Text, "promocode will get free $") && site == "csgocases"{
+            tweetsIds = append(tweetsIds, tweet.Id)
+        }else if strings.Contains(tweet.Text, "Golden Code") && site == "keydrop"{
             tweetsIds = append(tweetsIds, tweet.Id)
         }
     }
 
     if len(tweetsIds)==0{
-        errChan <- nil
-        codesChan <- nil
+        close(errChan)
+        close(codesChan)
         done <- true
         return
     }
@@ -283,30 +298,33 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     if err != nil {
         log.Print("Error getting codes!")
         errChan <- err
+        close(codesChan)
         done <- true
         return
     }
 
-    err = addNewCodesToDB(db, codes)
+    err = addNewCodesToDB(db, codes, site)
 
     if err!=nil{
         log.Print("Erorr adding new codes to the db!")
         errChan <- err
+        close(codesChan)
         done <- true
         return
     }
 
-    err = updateNewestId(db, resJSON.Meta.Newest_id)
+    err = updateNewestId(db, resJSON.Meta.Newest_id, site)
 
     if err != nil{
-        log.Println("Error updating newest id")
+        log.Print("Error updating newest id!")
         errChan <- err
+        close(codesChan)
         done <- true
         return
     }
 
-    errChan <- nil
-    codesChan <- codes
+    close(errChan)
     done <- true
+    codesChan <- codes
     return
 }
