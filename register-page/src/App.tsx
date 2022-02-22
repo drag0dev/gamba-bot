@@ -1,12 +1,13 @@
 import './App.css';
 
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 
 import Header from './components/Header';
 import Body from './components/Body';
 import Description from './components/Desciprion';
 import Footer from './components/Footer';
+import Redirect from './components/Redirect';
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
       <Routes>
 
         <Route path='/' element={<><Description /> <Body /></>} />
+        <Route path='/redirect' element={<Redirect />} />
+        <Route path='*' element={<Navigate to='/'/>}/>
 
       </Routes>
 

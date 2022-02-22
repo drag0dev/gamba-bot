@@ -30,7 +30,7 @@ html{
     @include displayFlex();
     background-color: $color_four;
     min-height: 15vh;
-    justify-content: left;
+    justify-content: space-between;
     font-size: 1.7vw;
     
     h1{
@@ -39,13 +39,20 @@ html{
         font-size: 3vw;
     }
 
+    .home-click{
+        margin-right: 10vw;
+        color: $color_three;
+        font-size: 2vw;
+        cursor: pointer;
+    }
+
 }
 
 .body{
     @include displayFlex();
     justify-content: space-around;
     background-color: $color_two;
-    min-height: 50vh;
+    min-height: 54vh;
     font-size: 1.7vw;
 
     .info{
@@ -84,7 +91,9 @@ html{
         .clickme{
             width: 100%;
             cursor: pointer;
-            color: $color_one;
+            a{
+                color: $color_one;
+            }
         }
     }
 
@@ -116,4 +125,10 @@ html{
         width: auto;
         filter: invert(1);
     }
+}
+
+.redirect{
+    @include displayFlex();
+    min-height: 79vh;
+    background-color: $color_two;
 }

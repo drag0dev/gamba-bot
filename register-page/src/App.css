@@ -27,9 +27,9 @@ html {
   text-align: center;
   background-color: #02020B;
   min-height: 15vh;
-  -webkit-box-pack: left;
-      -ms-flex-pack: left;
-          justify-content: left;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
   font-size: 1.7vw;
 }
 
@@ -37,6 +37,13 @@ html {
   margin-left: 2vw;
   color: #F7F7FF;
   font-size: 3vw;
+}
+
+.header .home-click {
+  margin-right: 10vw;
+  color: #F7F7FF;
+  font-size: 2vw;
+  cursor: pointer;
 }
 
 .body {
@@ -53,7 +60,7 @@ html {
   -ms-flex-pack: distribute;
       justify-content: space-around;
   background-color: #1A1B25;
-  min-height: 50vh;
+  min-height: 54vh;
   font-size: 1.7vw;
 }
 
@@ -129,6 +136,9 @@ html {
 .body .login .clickme {
   width: 100%;
   cursor: pointer;
+}
+
+.body .login .clickme a {
   color: #D36135;
 }
 
@@ -178,5 +188,20 @@ html {
   width: auto;
   -webkit-filter: invert(1);
           filter: invert(1);
+}
+
+.redirect {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  min-height: 79vh;
+  background-color: #1A1B25;
 }
 /*# sourceMappingURL=App.css.map */
