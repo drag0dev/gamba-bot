@@ -1,0 +1,119 @@
+$color_one: #D36135;
+$color_two: #1A1B25;
+$color_three: #F7F7FF;
+$color_four: #02020B;
+
+@mixin displayFlex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;    
+}
+
+html{
+    scroll-behavior: smooth;
+    overflow-x: hidden;   
+    overflow-y: hidden; 
+}
+
+*{
+    margin: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    color: $color_three;
+    text-align: center;
+    font-family: 'Brygada 1918', serif;
+    //font-family: ;
+}
+
+.header{
+    @include displayFlex();
+    background-color: $color_four;
+    min-height: 15vh;
+    justify-content: left;
+    font-size: 1.7vw;
+    
+    h1{
+        margin-left: 2vw;
+        color: $color_three;
+        font-size: 3vw;
+    }
+
+}
+
+.body{
+    @include displayFlex();
+    justify-content: space-around;
+    background-color: $color_two;
+    min-height: 50vh;
+    font-size: 1.7vw;
+
+    .info{
+        @include displayFlex();
+        flex-wrap: wrap;
+        flex-direction: row;
+
+        width: 40%;
+        min-height: 100%;
+        div, h2{
+            width: 100%;
+            margin-bottom: 5vh;
+        }
+
+        div{
+            @include displayFlex();
+            p, img{
+                width: 50%;
+
+            }
+        }        
+
+        
+        img{
+            max-width: 8vw;
+            max-height: auto;
+        }
+    }
+
+    .login{
+        @include displayFlex();
+        flex-wrap: wrap;
+        flex-direction: row;
+        width: 40%;
+        min-height: 100%;
+        .clickme{
+            width: 100%;
+            cursor: pointer;
+            color: $color_one;
+        }
+    }
+
+}
+
+.description{
+    @include displayFlex();
+    height: 25vh;
+    background-color: $color_two;
+    font-size: 1.7vw;
+
+    p{
+        margin-top: 2vh;
+        margin-left: 10vw;
+        margin-right: 10vw;
+        margin-bottom: 2vh;
+    }
+}
+
+.footer{
+    @include displayFlex();
+    background-color: $color_four;
+    color: $color_three;
+    min-height: 6vh;
+    font-size: 1vw;
+    img{
+        margin-left: 2vw;
+        height: 3vh;
+        width: auto;
+        filter: invert(1);
+    }
+}
