@@ -38,9 +38,9 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate){
         return
     }
     if m.Content == "!subscribe"{
-        handleSubscribe(s, m)
+        go handleSubscribe(s, m)
     }else if m.Content == "!unsubscribe"{
-        handleUnsubscribe(s, m)
+        go handleUnsubscribe(s, m)
     }
 }
 
