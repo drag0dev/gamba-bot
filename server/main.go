@@ -34,9 +34,26 @@ type resError struct{
     Error string `json:"error"`
 }
 
+func setCors(w *http.ResponseWriter){
+    (*w).Header().Set("Content-Type", "application/json")
+    (*w).Header().Set("Access-Control-Allow-Origin", "https://affectionate-lovelace-900e2f.netlify.app")
+    (*w).Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+    (*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Accept-Encoding, Content-Length")
+}
+
 // check if user is subscribed
 // POST @ /exists
 func exists(w http.ResponseWriter, r *http.Request){
+    setCors(&w)
+    if r.Method == "OPTIONS"{
+        return
+    }
+
+    if r.Method != "POST"{
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
+
     reqBody, err := ioutil.ReadAll(r.Body)
 
     if err != nil{
@@ -86,6 +103,16 @@ func exists(w http.ResponseWriter, r *http.Request){
 // add a new user id to the database
 // POST @ /exists
 func subscribe(w http.ResponseWriter, r *http.Request){
+    setCors(&w)
+    if r.Method == "OPTIONS"{
+        return
+    }
+
+    if r.Method != "POST"{
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
+
     reqBody, err := ioutil.ReadAll(r.Body)
 
     if err != nil{
@@ -146,6 +173,16 @@ func subscribe(w http.ResponseWriter, r *http.Request){
 // unsubscribe user
 // POST @ /unsubscribe
 func unsubscribe(w http.ResponseWriter, r *http.Request){
+    setCors(&w)
+    if r.Method == "OPTIONS"{
+        return
+    }
+
+    if r.Method != "POST"{
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
+
     reqBody, err := ioutil.ReadAll(r.Body)
 
     if err != nil{
