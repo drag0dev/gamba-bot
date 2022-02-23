@@ -3,14 +3,17 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"database/sql"
+
 	_ "github.com/lib/pq"
 
-    "drag0dev/gamba-bot/concurrency"
+	"drag0dev/gamba-bot/concurrency"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -116,6 +119,12 @@ func main (){
 
     go conScraping.StartScraping(db, dgSession, "csgocases")
     go conScraping.StartScraping(db, dgSession, "keydrop")
+
+    port := os.Getenv("PORT")
+    if port != ""{
+        log.Printf("Bot bound to %s port!", port)
+        go http.ListenAndServe(os.Getenv("PORT"),nil)
+    }
 
     log.Printf(`Now running. Press CTRL-C to exit.`)
     sc := make(chan os.Signal, 1)
