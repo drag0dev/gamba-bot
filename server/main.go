@@ -231,7 +231,12 @@ func main(){
     http.Handle("/subscribe", tollbooth.LimitFuncHandler(lmt, subscribe))
     http.Handle("/unsubscribe", tollbooth.LimitFuncHandler(lmt, unsubscribe))
 
-    log.Print("Starting server on port 8080!")
-    log.Print(http.ListenAndServe(":8080", nil))
+    port := os.Getenv("PORT")
+    if port == ""{
+        port = "8080"
+    }
+
+    log.Printf("Starting server on port %s!", port)
+    log.Print(http.ListenAndServe(":" + port, nil))
 
 }
