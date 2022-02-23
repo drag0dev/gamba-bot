@@ -12,6 +12,8 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+
+	"github.com/didip/tollbooth/v6"
 )
 
 var db *sql.DB
@@ -220,9 +222,14 @@ func main(){
     }
     db = database
 
-    http.HandleFunc("/exists", exists)
-    http.HandleFunc("/subscribe", subscribe)
-    http.HandleFunc("/unsubscribe", unsubscribe)
+    // 2 request every second for each endpoint for each user
+    lmt := tollbooth.NewLimiter(2, nil)
+    lmt.SetMessage("You have reached maximum request limit.")
+    lmt.SetMessageContentType("text/plain; charset=utf-8")
+
+    http.Handle("/exists", tollbooth.LimitFuncHandler(lmt, exists))
+    http.Handle("/subscribe", tollbooth.LimitFuncHandler(lmt, subscribe))
+    http.Handle("/unsubscribe", tollbooth.LimitFuncHandler(lmt, unsubscribe))
 
     log.Print("Starting server on port 8080!")
     log.Print(http.ListenAndServe(":8080", nil))
