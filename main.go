@@ -12,7 +12,6 @@ import (
 
     "drag0dev/gamba-bot/concurrency"
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
 )
 
 var Token string
@@ -20,14 +19,6 @@ var DB_URL, DB_NAME_USERS string
 var db *sql.DB
 
 func init(){
-    var err error
-    err = godotenv.Load(".env")
-
-    if err != nil {
-        log.Printf("Error opening .env file, %s\n", err)
-        return
-    }
-
     Token = os.Getenv("DG_TOKEN")
     DB_NAME_USERS = os.Getenv("DB_NAME_USERS")
     DB_URL = os.Getenv("DB_URL")

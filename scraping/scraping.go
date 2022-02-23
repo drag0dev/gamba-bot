@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -186,15 +185,6 @@ func updateNewestId(db *sql.DB, id string, website string) error{
 }
 
 func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan bool, site string) {
-    err := godotenv.Load(".env")
-    if err != nil{
-        log.Print("Cannot load .env for scraper!")
-        errChan <- err
-        close(codesChan)
-        done <- true
-        return
-    }
-
     BASE_URL_TWITTER = os.Getenv("TWITTER_BASE_URL")
     BEARER_TOKEN = os.Getenv("BEARER_TOKEN")
     DB_NAME_siteS = os.Getenv("DB_NAME_WEBSITES")

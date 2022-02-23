@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
 )
 
 var DB_NAME_USERS string
@@ -60,11 +59,6 @@ func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errCha
 }
 
 func StartScraping (db *sql.DB, s *discordgo.Session, website string){
-    err := godotenv.Load(".env")
-    if err != nil {
-        log.Printf("Error opening .env file, %s\n", err)
-        return
-    }
 
     DB_NAME_USERS = os.Getenv("DB_NAME_USERS")
 

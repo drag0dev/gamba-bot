@@ -9,10 +9,7 @@ require (
 )
 
 require (
-	github.com/didip/tollbooth/v6 v6.1.2 // indirect
-	github.com/go-pkgz/expirable-cache v0.0.3 // indirect
-	github.com/gorilla/websocket v1.4.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/crypto v0.0.0-20181030102418-4d3f4d9ffa16 // indirect
-	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
+	github.com/gorilla/websocket v1.4.1 // indirect
+	golang.org/x/crypto v0.0.0-20191108234033-bd318be0434a // indirect
+	golang.org/x/sys v0.0.0-20191110163157-d32e6e3b99c4 // indirect
 )
