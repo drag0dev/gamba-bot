@@ -131,4 +131,12 @@ html{
     @include displayFlex();
     min-height: 79vh;
     background-color: $color_two;
+    p{
+        font-size: 1.5vw;
+    }
+    button{
+        font-size: 1.5vw;
+        background-color: $color_two;
+        margin-top: 2vh;
+    }
 }

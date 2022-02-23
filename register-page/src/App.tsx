@@ -5,7 +5,7 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 
 import Header from './components/Header';
 import Body from './components/Body';
-import Description from './components/Desciprion';
+import Description from './components/Description';
 import Footer from './components/Footer';
 import Redirect from './components/Redirect';
 

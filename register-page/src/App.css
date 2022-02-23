@@ -204,4 +204,14 @@ html {
   min-height: 79vh;
   background-color: #1A1B25;
 }
+
+.redirect p {
+  font-size: 1.5vw;
+}
+
+.redirect button {
+  font-size: 1.5vw;
+  background-color: #1A1B25;
+  margin-top: 2vh;
+}
 /*# sourceMappingURL=App.css.map */
