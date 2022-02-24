@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -49,7 +48,7 @@ func handleSubscribe(s *discordgo.Session, m *discordgo.MessageCreate){
 
         if err != nil{
             s.ChannelMessageSend(m.ChannelID ,"There was a problem subscribing user " + m.Author.Username)
-            log.Println(err)
+            log.Printf(`Error encountered during subscribe handling: %s`, err)
             return
         }
 
@@ -79,6 +78,7 @@ func handleUnsubscribe(s *discordgo.Session, m *discordgo.MessageCreate){
 
         if err != nil{
             s.ChannelMessageSend(m.ChannelID, "Interal server erorr, please try again!")
+            log.Printf(`Error encountered during unsubscribing handling: %s`, err)
             return
         }else{
             s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s has been unsubscribed!", m.Author.Username))
@@ -119,12 +119,6 @@ func main (){
 
     go conScraping.StartScraping(db, dgSession, "csgocases")
     go conScraping.StartScraping(db, dgSession, "keydrop")
-
-    port := os.Getenv("PORT")
-    if port != ""{
-        log.Printf("Bot bound to %s port!", port)
-        go http.ListenAndServe(os.Getenv("PORT"),nil)
-    }
 
     log.Printf(`Now running. Press CTRL-C to exit.`)
     sc := make(chan os.Signal, 1)

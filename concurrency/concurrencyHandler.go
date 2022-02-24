@@ -54,7 +54,7 @@ func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errCha
         }
     }
 
-    errChan <- nil
+    close(errChan)
     return
 }
 
@@ -87,7 +87,7 @@ func StartScraping (db *sql.DB, s *discordgo.Session, website string){
             err := <- cEmittError
 
             if err != nil{
-                log.Printf("error encounterd during emission: %s", err)
+                log.Printf(`"%s", error encounterd during emission: %s`, website, err)
                 errState = true
             }
         }

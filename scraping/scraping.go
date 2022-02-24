@@ -10,8 +10,7 @@ import (
 	"os"
 	"strings"
 
-	_ "github.com/lib/pq"
-)
+	_ "github.com/lib/pq")
 
 var BASE_URL_TWITTER string
 var BEARER_TOKEN string
@@ -139,10 +138,13 @@ func getCodes(tweets []string) (error, [][]string){
         var ocrResponse ocrRes
 
         // ocr sometimes fails and unmarshaling fails
+        // solution for now is to just send the image to the users with no code
 
         err = json.Unmarshal([]byte(body), &ocrResponse)
         if err != nil{
-            return err, nil
+            temp := []string{"", url}
+            codes = append(codes, temp)
+            continue
         }
 
         var parsedCode string = ocrResponse.ParsedResults[0].ParsedText
@@ -173,7 +175,7 @@ func addNewCodesToDB(db *sql.DB, codes [][]string, website string) error{
 }
 
 func updateNewestId(db *sql.DB, id string, website string) error{
-    log.Print("Updating new id")
+    log.Printf(`"%s", Updating new id`, website)
     var updateStm string = fmt.Sprintf(`UPDATE %s SET lastId = '%s' WHERE name = '%s';`, DB_NAME_siteS, id, website)
 
     _, err := db.Exec(updateStm)
@@ -209,7 +211,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     }else if site == "keydrop"{
         url = fmt.Sprintf(BASE_URL_TWITTER + "users/" + KEYDROP_ID + "/tweets?max_results=20")
     }else{
-        log.Print("Invalid website!")
+        log.Printf(`"%s", Invalid website!`, site)
         return
     }
 
@@ -225,7 +227,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
 
     res, err := client.Do(req)
     if err != nil{
-        log.Printf("Failed to fetch %s, error: %s\n", site, err)
+        log.Printf(`"%s", Failed to fetch %s, error: %s\n`,site, site, err)
         errChan <- err
         close(codesChan)
         done <- true
@@ -235,7 +237,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     body, err := ioutil.ReadAll(res.Body)
 
     if err != nil{
-        log.Printf("Failed to parse body, error: %s\n", err)
+        log.Printf(`"%s", Failed to parse body, error: %s\n`, site, err)
         errChan <- err
         close(codesChan)
         done <- true
@@ -286,7 +288,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     err, codes := getCodes(tweetsIds)
 
     if err != nil {
-        log.Print("Error getting codes!")
+        log.Printf(`"%s", Error getting codes: %s`, site, err)
         errChan <- err
         close(codesChan)
         done <- true
@@ -296,7 +298,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     err = addNewCodesToDB(db, codes, site)
 
     if err!=nil{
-        log.Print("Erorr adding new codes to the db!")
+        log.Printf(`"%s", Erorr adding new codes to the db: %s`, site, err)
         errChan <- err
         close(codesChan)
         done <- true
@@ -306,7 +308,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     err = updateNewestId(db, resJSON.Meta.Newest_id, site)
 
     if err != nil{
-        log.Print("Error updating newest id!")
+        log.Printf(`"%s", Error updating newest id: %s`, site, err)
         errChan <- err
         close(codesChan)
         done <- true
