@@ -130,6 +130,7 @@ func getCodes(tweets []string) (error, [][]string){
 
         res, err := client.Do(req)
         if err != nil{
+            log.Printf(`Error encountered during ocr pass: %s`, err)
             return err, nil
         }
 

@@ -52,10 +52,17 @@ func handleSubscribe(s *discordgo.Session, m *discordgo.MessageCreate){
             return
         }
 
-        s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s sucessfully subscribed!", m.Author.Username))
+        _, err =s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s sucessfully subscribed!", m.Author.Username))
+        if err != nil{
+            log.Printf("Error encountered during subscribe sucessful message: %s", err)
+        }
 
     }else if count{
-        s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s already subscribed!", m.Author.Username))
+        _, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s already subscribed!", m.Author.Username))
+        if err != nil{
+            log.Printf("Error encountered during message send user already subscribed: %s", err)
+        }
+
         return
     }else{
         s.ChannelMessageSend(m.ChannelID, "Internal error, please try again later!")
@@ -81,7 +88,10 @@ func handleUnsubscribe(s *discordgo.Session, m *discordgo.MessageCreate){
             log.Printf(`Error encountered during unsubscribing handling: %s`, err)
             return
         }else{
-            s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s has been unsubscribed!", m.Author.Username))
+            _, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("User %s has been unsubscribed!", m.Author.Username))
+            if err != nil{
+                log.Printf("Error encountered during user unsubscribed: %s", err)
+            }
             return
         }
 

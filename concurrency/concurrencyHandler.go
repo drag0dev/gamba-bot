@@ -46,11 +46,14 @@ func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errCha
     for _, id := range idsArray{
         userChannel, err := s.UserChannelCreate(id)
         if err != nil{
+            log.Printf(`Error encountered during creation of channel in emit codes: %s`, err)
             errChan <- err
             return
         }
+
         for _, code := range codes{
-            s.ChannelMessageSend(userChannel.ID, fmt.Sprintf("%s CODE: %s (%s)", strings.ToUpper(site), code[0], code[1]))
+            // catching error in order to clean up logs
+            _, err = s.ChannelMessageSend(userChannel.ID, fmt.Sprintf("%s CODE: %s (%s)", strings.ToUpper(site), code[0], code[1]))
         }
     }
 
