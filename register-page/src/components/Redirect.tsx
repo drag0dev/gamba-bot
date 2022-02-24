@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import ApiInfo from '../ApiInfo' 
+import ApiInfo from '../ApiInfo'
 
 interface userInfo {
     id: string,
@@ -22,7 +22,6 @@ const Redirect = () =>{
     });
     const navigate = useNavigate();
 
-
     const getUserInfo = async (data: string[]) => {
         let res = await fetch('https://discord.com/api/v8/users/@me', {
             headers: {
@@ -30,7 +29,7 @@ const Redirect = () =>{
             }
 
         })
-        
+
         let tempUserData: userInfo = await res.json();
         await setUserData(tempUserData);
 
@@ -69,7 +68,7 @@ const Redirect = () =>{
         });
 
         if (res.status == 200){
-            setMessage('Successfully subscribed, returning home...')
+            setMessage('Successfully subscribed, returning home... (DON\'T FORGET TO JOIN THE SERVER)')
             const timer = setTimeout(()=>{
                 navigate('/')
             }, 2000);
@@ -80,7 +79,7 @@ const Redirect = () =>{
                 navigate('/')
             }, 2000);
         }
-    } 
+    }
 
     const onClickUnsubscribe = async () => {
         setUserLoading(true)
@@ -109,7 +108,7 @@ const Redirect = () =>{
 
     useEffect(()=>{
         let parsedParams: string[] = []; // token_type, access_token, expires_in, scope
-        
+
         if (location){
             let urlParams = location.hash
             let params = urlParams.replaceAll('?', '').split('&')
@@ -125,7 +124,7 @@ const Redirect = () =>{
     return(
         <div className='redirect'>
             <div className='redirect-info'>
-            
+
                 <div>
                     <p>
                       {message}
@@ -134,13 +133,13 @@ const Redirect = () =>{
 
                 {!userLoading &&
                     <div>
-                        {userState 
-                        ? <button onClick={onClickUnsubscribe}>Unsubcribe</button>
+                        {userState
+                        ? <button onClick={onClickUnsubscribe}>Unsubscribe</button>
                         : <button onClick={onClickSubscribe}>Subscribe</button>
                         }
                     </div>
                 }
-            
+
             </div>
 
         </div>

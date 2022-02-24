@@ -133,6 +133,10 @@ html {
   min-height: 100%;
 }
 
+.body .login div {
+  margin-bottom: 2vh;
+}
+
 .body .login .clickme {
   width: 100%;
   cursor: pointer;
