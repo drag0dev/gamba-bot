@@ -10,7 +10,8 @@ import (
 	"os"
 	"strings"
 
-	_ "github.com/lib/pq")
+	_ "github.com/lib/pq"
+)
 
 var BASE_URL_TWITTER string
 var BEARER_TOKEN string
@@ -198,9 +199,9 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
 
     var url string
     if site == "csgocases"{
-        url = fmt.Sprintf(BASE_URL_TWITTER + "users/" + CSGOCASES_ID + "/tweets?max_results=20")
+        url = fmt.Sprintf(BASE_URL_TWITTER + "users/" + CSGOCASES_ID + "/tweets?max_results=10")
     }else if site == "keydrop"{
-        url = fmt.Sprintf(BASE_URL_TWITTER + "users/" + KEYDROP_ID + "/tweets?max_results=20")
+        url = fmt.Sprintf(BASE_URL_TWITTER + "users/" + KEYDROP_ID + "/tweets?max_results=10")
     }else{
         log.Printf(`"%s", Invalid website!`, site)
         return
@@ -305,8 +306,8 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     }
 
     close(errChan)
-    newestIdChan <- resJSON.Meta.Newest_id
     done <- true
     codesChan <- codes
+    newestIdChan <- resJSON.Meta.Newest_id
     return
 }

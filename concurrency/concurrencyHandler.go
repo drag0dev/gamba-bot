@@ -14,6 +14,7 @@ import (
 
 var DB_NAME_USERS string
 var DB_NAME_SITES string
+var DB_NAME_CHANNELS string
 
 func updateNewestId(db *sql.DB, id string, website string, errChan chan error){
     log.Printf(`"%s", Updating new id`, website)
@@ -75,9 +76,52 @@ func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errCha
     return
 }
 
+func emitCodesToChannels(db *sql.DB, codes [][]string, s *discordgo.Session, errChan chan error, site string){
+    var selectStm string = fmt.Sprintf(`SELECT * from "%s";`, DB_NAME_CHANNELS)
+    rows, err := db.Query(selectStm)
+
+    if err != nil{
+        errChan <- err
+        return
+    }
+
+    defer rows.Close()
+
+    var idsArray []string
+    for rows.Next(){
+        var temp string
+        err = rows.Scan(&temp)
+        if err != nil{
+            errChan <- err
+            return
+        }
+        idsArray = append(idsArray, temp)
+    }
+
+    err = rows.Err()
+
+    if err != nil{
+        errChan <- err
+        return
+    }
+
+    for _, id := range idsArray{
+        for _, code := range codes{
+            // catching error in order to clean up logs
+            _, err = s.ChannelMessageSend(id, fmt.Sprintf("%s CODE: %s (%s)", strings.ToUpper(site), code[0], code[1]))
+        }
+    }
+
+    close(errChan)
+    return
+}
+
 func StartScraping (db *sql.DB, s *discordgo.Session, website string){
     DB_NAME_USERS = os.Getenv("DB_NAME_USERS")
     DB_NAME_SITES = os.Getenv("DB_NAME_WEBSITES")
+    DB_NAME_CHANNELS = os.Getenv("DB_NAME_CHANNELS")
+    var userEmitted bool = false
+    var channelEmitted bool = false
 
     for {
         log.Printf(`Scraping "%s"`, strings.ToUpper(website))
@@ -97,28 +141,53 @@ func StartScraping (db *sql.DB, s *discordgo.Session, website string){
         if err != nil{
             log.Printf(`"%s" scraper encountered error: %s`,strings.ToUpper(website), err)
             errState = true
-        }else if len(codes)>0 && done{
-            log.Printf(`Emitting codes for "%s"`, strings.ToUpper(website))
-            cEmittError := make(chan error)
+        }
 
-            go emitCodesToUsers(db, codes, s, cEmittError, website)
+        if len(codes)>0 && done && !userEmitted && !errState{ // emit to users
+            log.Printf(`Emitting codes to users for "%s"`, strings.ToUpper(website))
+            cEmitUsersError := make(chan error)
 
-            err := <- cEmittError
+            go emitCodesToUsers(db, codes, s, cEmitUsersError, website)
+
+            err := <- cEmitUsersError
 
             if err != nil{
-                log.Printf(`"%s", error encounterd during emission: %s`, website, err)
+                log.Printf(`"%s", error encounterd during user emission: %s`, website, err)
                 errState = true
             }else{
-                // only change the newestid if codes were emitted succesfully
-                // in case they didn't scraping is gonna be redone until codes can be emitted
-                cUpdateError := make(chan error)
-                go updateNewestId(db, newestId, website, cUpdateError)
-                err := <- cUpdateError
-                if err != nil{
-                    log.Printf(`"%s" error updating newest id: %s`, website, err)
-                    errState = true
-                }
+                userEmitted = true
+            }
+        }
 
+
+        if len(codes)>0 && done && !channelEmitted && !errState{ // emit to channels
+            log.Printf(`Emitting codes to channels for "%s"`, strings.ToUpper(website))
+            cEmitChannelError := make(chan error)
+
+            go emitCodesToChannels(db, codes, s, cEmitChannelError, website)
+
+            err := <- cEmitChannelError
+
+            if err != nil{
+                log.Printf(`"%s", error encounterd during channel emission: %s`, website, err)
+                errState = true
+            }else{
+                channelEmitted = true
+            }
+        }
+
+        if !errState && len(codes)>0{
+            // only change the newestid if codes were emitted succesfully
+            // in case they didn't scraping is gonna be redone until codes can be emitted
+            cUpdateError := make(chan error)
+            go updateNewestId(db, newestId, website, cUpdateError)
+            err := <- cUpdateError
+            if err != nil{
+                log.Printf(`"%s" error updating newest id: %s`, website, err)
+                errState = true
+            }else{
+                channelEmitted = false
+                userEmitted = false
             }
         }
 

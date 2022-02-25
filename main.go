@@ -9,6 +9,7 @@ import (
 
 	"database/sql"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
 	"drag0dev/gamba-bot/concurrency"
@@ -17,12 +18,14 @@ import (
 )
 
 var Token string
-var DB_URL, DB_NAME_USERS string
+var DB_URL, DB_NAME_USERS, DB_NAME_CHANNELS string
 var db *sql.DB
 
 func init(){
+    _ = godotenv.Load(".env")
     Token = os.Getenv("DG_TOKEN")
     DB_NAME_USERS = os.Getenv("DB_NAME_USERS")
+    DB_NAME_CHANNELS = os.Getenv("DB_NAME_CHANNELS")
     DB_URL = os.Getenv("DB_URL")
 }
 
@@ -34,7 +37,12 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate){
         go handleSubscribe(s, m)
     }else if m.Content == "!unsubscribe"{
         go handleUnsubscribe(s, m)
+    }else if m.Content == "!bind"{ // send codes in channel that this command has been typed in
+        go handleBind(s, m)
+    }else if m.Content == "!unbind"{
+        go handleUnbind(s, m)
     }
+
 }
 
 func handleSubscribe(s *discordgo.Session, m *discordgo.MessageCreate){
@@ -101,6 +109,81 @@ func handleUnsubscribe(s *discordgo.Session, m *discordgo.MessageCreate){
     }
 }
 
+func handleBind(s *discordgo.Session, m *discordgo.MessageCreate){
+    var existsStm string = fmt.Sprintf(`SELECT EXISTS (SELECT 1 FROM %s WHERE channel_id='%s');`, DB_NAME_CHANNELS, m.ChannelID)
+    var exists bool
+
+    _ = db.QueryRow(existsStm).Scan(&exists)
+
+    if !exists{
+        var insertStm string = fmt.Sprintf(`INSERT INTO %s("channel_id") VALUES('%s');`, DB_NAME_CHANNELS, m.ChannelID)
+
+        _, err := db.Exec(insertStm)
+
+        if err != nil{
+            log.Printf("Error encountered during insertion of new channel: %s", err)
+            _, err = s.ChannelMessageSend(m.ChannelID, "Internal server error, please try again!")
+            if err != nil{
+                log.Printf("Error sending message internal server error/insertion of new channel: %s", err)
+                return
+            }
+        }
+
+        _, err = s.ChannelMessageSend(m.ChannelID, "Channel has been bound sucessfully!")
+        if err != nil{
+            log.Printf("Error sending message channel bound: %s", err)
+        }
+
+    }else if exists{
+        _, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("This channel is already been bound!"))
+        if err != nil{
+            log.Printf("Error sending message channel already bound: %s", err)
+        }
+    }else{
+        _, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Internal server error, please try again!"))
+        if err != nil{
+            log.Printf("Error sending message internal serve error/bind insert else: %s", err)
+        }
+    }
+
+}
+
+func handleUnbind(s *discordgo.Session, m *discordgo.MessageCreate){
+    var existsStm string = fmt.Sprintf(`SELECT EXISTS (SELECT 1 FROM %s WHERE channel_id='%s');`, DB_NAME_CHANNELS, m.ChannelID)
+    var exists bool
+
+    _ = db.QueryRow(existsStm).Scan(&exists)
+    if exists{
+        var deleteStm string = fmt.Sprintf(`DELETE FROM %s WHERE channel_id='%s';`, DB_NAME_CHANNELS, m.ChannelID)
+        _, err := db.Exec(deleteStm)
+
+        if err != nil{
+            log.Printf("Error encountered deletion of channel: %s", err)
+            _, err = s.ChannelMessageSend(m.ChannelID, "Internal server error, please try again!")
+            if err != nil{
+                log.Printf("Error sending message internal server error/unbind/deltestm: %s", err)
+                return
+            }
+        }
+
+        _, err = s.ChannelMessageSend(m.ChannelID, "Channel unbound successfully!")
+        if err != nil{
+            log.Printf("Error sending message unbound successfully: %s", err)
+        }
+
+    }else if !exists{
+        _, err := s.ChannelMessageSend(m.ChannelID, "Bot is not bound to this channel!")
+        if err !=nil {
+            log.Printf("Error sending message bot not bound: %s", err)
+        }
+    }else{
+        _, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Internal server error, please try again!"))
+        if err != nil{
+            log.Printf("Error sending message unbind/else: %s", err)
+        }
+    }
+
+}
 
 func main (){
     var err error
