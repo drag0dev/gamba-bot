@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link} from 'react-router-dom';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -12,12 +12,17 @@ const Header = () => {
                 </h1>
 
 
-            {location.pathname.includes('/redirect') &&
+            <div className='options'>
 
-                <p onClick={() => {navigate('/')}} className='home-click'>
+                <p onClick={() => {navigate('/')}} >
                     Home
                 </p>
-            }
+
+                <p >
+                    <Link to='/commands'>Commands</Link>
+                </p>
+
+            </div>
 
         </div>       
     );

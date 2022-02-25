@@ -8,6 +8,7 @@ import Body from './components/Body';
 import Description from './components/Description';
 import Footer from './components/Footer';
 import Redirect from './components/Redirect';
+import Commands from './components/Commands';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
 
         <Route path='/' element={<><Description /> <Body /></>} />
         <Route path='/redirect' element={<Redirect />} />
+        <Route path='/commands' element={<Commands />} />
         <Route path='*' element={<Navigate to='/'/>}/>
 
       </Routes>

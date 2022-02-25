@@ -39,10 +39,24 @@ html {
   font-size: 3vw;
 }
 
-.header .home-click {
-  margin-right: 10vw;
-  color: #F7F7FF;
-  font-size: 2vw;
+.header .options {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  -ms-flex-pack: distribute;
+      justify-content: space-around;
+  text-align: center;
+  min-width: 30vw;
+}
+
+.header p {
   cursor: pointer;
 }
 
@@ -217,5 +231,58 @@ html {
   font-size: 1.5vw;
   background-color: #1A1B25;
   margin-top: 2vh;
+}
+
+.commands {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  height: 38.5vw;
+  background-color: #1A1B25;
+  font-size: 1.22vw;
+}
+
+.commands div {
+  width: 90%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  -ms-flex-pack: distribute;
+      justify-content: space-around;
+  text-align: center;
+}
+
+.commands div h3 {
+  color: #D36135;
+}
+
+.commands div .option-name {
+  width: 25%;
+}
+
+.commands .commands-header {
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
 }
 /*# sourceMappingURL=App.css.map */

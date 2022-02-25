@@ -32,17 +32,20 @@ html{
     min-height: 15vh;
     justify-content: space-between;
     font-size: 1.7vw;
-    
     h1{
         margin-left: 2vw;
         color: $color_three;
         font-size: 3vw;
     }
 
-    .home-click{
-        margin-right: 10vw;
-        color: $color_three;
-        font-size: 2vw;
+    .options{
+        @include displayFlex();
+        justify-content: space-around;
+        text-align: center;
+        min-width: 30vw;
+    }
+
+    p{
         cursor: pointer;
     }
 
@@ -144,4 +147,30 @@ html{
         background-color: $color_two;
         margin-top: 2vh;
     }
+}
+
+.commands{
+    @include displayFlex();
+    flex-wrap: wrap;
+    flex-direction: row;
+    height: 38.5vw;
+    background-color: $color_two;
+    font-size: 1.22vw;
+    div{
+        width: 90%;
+        @include displayFlex();
+        justify-content: space-around;
+        text-align: center;
+        h3{
+            color: $color_one;
+        }
+        
+        .option-name{
+            width: 25%;
+        }
+    }
+    .commands-header{
+        justify-content: center;
+    }
+
 }
