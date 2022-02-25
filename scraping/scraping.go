@@ -175,19 +175,8 @@ func addNewCodesToDB(db *sql.DB, codes [][]string, website string) error{
     return nil
 }
 
-func updateNewestId(db *sql.DB, id string, website string) error{
-    log.Printf(`"%s", Updating new id`, website)
-    var updateStm string = fmt.Sprintf(`UPDATE %s SET lastId = '%s' WHERE name = '%s';`, DB_NAME_siteS, id, website)
 
-    _, err := db.Exec(updateStm)
-
-    if err != nil{
-        return err
-    }
-    return nil
-}
-
-func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan bool, site string) {
+func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan bool, newestIdChan chan string, site string) {
     BASE_URL_TWITTER = os.Getenv("TWITTER_BASE_URL")
     BEARER_TOKEN = os.Getenv("BEARER_TOKEN")
     DB_NAME_siteS = os.Getenv("DB_NAME_WEBSITES")
@@ -199,6 +188,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     if err != nil{
         errChan <- err
         close(codesChan)
+        close(newestIdChan)
         done <- true
         return
     }
@@ -220,6 +210,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     if err != nil{
         errChan <- err
         close(codesChan)
+        close(newestIdChan)
         done <- true
         return
     }
@@ -231,6 +222,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
         log.Printf(`"%s", Failed to fetch %s, error: %s\n`,site, site, err)
         errChan <- err
         close(codesChan)
+        close(newestIdChan)
         done <- true
         return
     }
@@ -241,6 +233,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
         log.Printf(`"%s", Failed to parse body, error: %s\n`, site, err)
         errChan <- err
         close(codesChan)
+        close(newestIdChan)
         done <- true
         return
     }
@@ -251,6 +244,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     if err!=nil{
         errChan <- err
         close(codesChan)
+        close(newestIdChan)
         done <- true
         return
     }
@@ -259,6 +253,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     if resJSON.Meta.Newest_id <= oldNewestId{
         close(errChan)
         close(codesChan)
+        close(newestIdChan)
         done <- true
         return
     }
@@ -282,6 +277,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     if len(tweetsIds)==0{
         close(errChan)
         close(codesChan)
+        close(newestIdChan)
         done <- true
         return
     }
@@ -292,6 +288,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
         log.Printf(`"%s", Error getting codes: %s`, site, err)
         errChan <- err
         close(codesChan)
+        close(newestIdChan)
         done <- true
         return
     }
@@ -302,21 +299,13 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
         log.Printf(`"%s", Erorr adding new codes to the db: %s`, site, err)
         errChan <- err
         close(codesChan)
-        done <- true
-        return
-    }
-
-    err = updateNewestId(db, resJSON.Meta.Newest_id, site)
-
-    if err != nil{
-        log.Printf(`"%s", Error updating newest id: %s`, site, err)
-        errChan <- err
-        close(codesChan)
+        close(newestIdChan)
         done <- true
         return
     }
 
     close(errChan)
+    newestIdChan <- resJSON.Meta.Newest_id
     done <- true
     codesChan <- codes
     return

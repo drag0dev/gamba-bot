@@ -13,6 +13,20 @@ import (
 )
 
 var DB_NAME_USERS string
+var DB_NAME_SITES string
+
+func updateNewestId(db *sql.DB, id string, website string, errChan chan error){
+    log.Printf(`"%s", Updating new id`, website)
+    var updateStm string = fmt.Sprintf(`UPDATE %s SET lastId = '%s' WHERE name = '%s';`, DB_NAME_SITES, id, website)
+
+    _, err := db.Exec(updateStm)
+
+    if err != nil{
+        errChan <- err
+    }
+    close(errChan)
+}
+
 
 func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errChan chan error, site string) {
     var selectStm string = fmt.Sprintf(`SELECT * from "%s";`, DB_NAME_USERS)
@@ -62,21 +76,23 @@ func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errCha
 }
 
 func StartScraping (db *sql.DB, s *discordgo.Session, website string){
-
     DB_NAME_USERS = os.Getenv("DB_NAME_USERS")
+    DB_NAME_SITES = os.Getenv("DB_NAME_WEBSITES")
 
     for {
         log.Printf(`Scraping "%s"`, strings.ToUpper(website))
         cErr := make(chan error)
         cCodes := make(chan [][]string)
         cDone := make(chan bool)
+        cId := make(chan string)
         var errState bool = false
 
-        go scraping.Scrape(db, cErr, cCodes, cDone, website)
+        go scraping.Scrape(db, cErr, cCodes, cDone, cId, website)
 
         done := <- cDone
         err := <- cErr
         codes := <- cCodes
+        newestId := <- cId
 
         if err != nil{
             log.Printf(`"%s" scraper encountered error: %s`,strings.ToUpper(website), err)
@@ -92,15 +108,26 @@ func StartScraping (db *sql.DB, s *discordgo.Session, website string){
             if err != nil{
                 log.Printf(`"%s", error encounterd during emission: %s`, website, err)
                 errState = true
+            }else{
+                // only change the newestid if codes were emitted succesfully
+                // in case they didn't scraping is gonna be redone until codes can be emitted
+                cUpdateError := make(chan error)
+                go updateNewestId(db, newestId, website, cUpdateError)
+                err := <- cUpdateError
+                if err != nil{
+                    log.Printf(`"%s" error updating newest id: %s`, website, err)
+                    errState = true
+                }
+
             }
         }
 
-        if !errState{ // if there was no error wait for 15minutes before next check
-            log.Printf(`Scraping successful for "%s", sleeping for 15min`, strings.ToUpper(website))
-            time.Sleep(900 * time.Second)
+        if !errState{ // if there was no error wait for 3minutes before next check
+            log.Printf(`Scraping successful for "%s", sleeping for 3min`, strings.ToUpper(website))
+            time.Sleep(180 * time.Second)
         }else{
-            log.Printf(`Error getting codes for "%s", sleeping for 5min`, strings.ToUpper(website))
-            time.Sleep(300 * time.Second) // if there was error wait 5 minutes before retrying
+            log.Printf(`Error getting codes for "%s", sleeping for 2min`, strings.ToUpper(website))
+            time.Sleep(120 * time.Second) // if there was error wait 2 minutes before retrying
         }
     }
 

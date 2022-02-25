@@ -3,8 +3,8 @@ import DiscordInfo from '../DiscordInfo';
 
 const LogIn = () => {
     let url = `https://discord.com/api/oauth2/authorize?response_type=token&client_id=${DiscordInfo.ClientID}&scope=identify`;
-    let invite = 'https://discord.gg/BX2NzeG86r';
-    
+    let invite = 'https://discord.com/invite/bWQQnC9CCe';
+
     return(
         <div className='login'>
 
@@ -30,13 +30,13 @@ const LogIn = () => {
 
                 <p className='clickme'>
                     <a href={invite} rel='nooopener noreferrer' target='_blank'>
-                        Join 
+                        Join
                     </a>
                 </p>
 
             </div>
 
-        
+
         </div>
     );
 }
