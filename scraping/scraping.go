@@ -124,7 +124,7 @@ func getCodes(tweets []string) (error, [][]string){
 
     // passing images through ocr
     for _, url := range imageURLs{
-        req, err := http.NewRequest("get", BASE_URL_OCR + fmt.Sprintf("url?apiKey=%s&url=%s",OCR_API_KEY, url), nil)
+        req, err := http.NewRequest("get", BASE_URL_OCR + fmt.Sprintf("?apiKey=%s&url=%s",OCR_API_KEY, url), nil)
         if err != nil{
             return err, nil
         }

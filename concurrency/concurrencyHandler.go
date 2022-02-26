@@ -30,86 +30,103 @@ func updateNewestId(db *sql.DB, id string, website string, errChan chan error){
 
 
 func emitCodesToUsers(db *sql.DB, codes [][]string, s *discordgo.Session, errChan chan error, site string) {
-    var selectStm string = fmt.Sprintf(`SELECT * from "%s";`, DB_NAME_USERS)
-    rows, err := db.Query(selectStm)
+    var offset int = 0
+    for {
+        var selectStm string = fmt.Sprintf(`SELECT user_id FROM "%s" LIMIT 100 OFFSET %d;`, DB_NAME_USERS, offset)
+        rows, err := db.Query(selectStm)
 
-    if err != nil{
-        errChan <- err
-        return
-    }
-
-    defer rows.Close()
-
-    var idsArray []string
-    for rows.Next(){
-        var temp string
-        err = rows.Scan(&temp)
         if err != nil{
             errChan <- err
             return
         }
-        idsArray = append(idsArray, temp)
-    }
 
-    err = rows.Err()
+        defer rows.Close()
 
-    if err != nil{
-        errChan <- err
-        return
-    }
+        var idsArray []string
+        for rows.Next(){
+            var temp string
+            err = rows.Scan(&temp)
+            if err != nil{
+                errChan <- err
+                return
+            }
+            idsArray = append(idsArray, temp)
+        }
 
-    for _, id := range idsArray{
-        userChannel, err := s.UserChannelCreate(id)
+        err = rows.Err()
+
         if err != nil{
-            log.Printf(`Error encountered during creation of channel in emit codes: %s`, err)
             errChan <- err
             return
         }
 
-        for _, code := range codes{
-            // catching error in order to clean up logs
-            _, err = s.ChannelMessageSend(userChannel.ID, fmt.Sprintf("%s CODE: %s (%s)", strings.ToUpper(site), code[0], code[1]))
+        if len(idsArray) == 0{
+            break
         }
-    }
 
+        for _, id := range idsArray{
+            userChannel, err := s.UserChannelCreate(id)
+            if err != nil{
+                log.Printf(`Error encountered during creation of channel in emit codes: %s`, err)
+                errChan <- err
+                return
+            }
+
+            for _, code := range codes{
+                // catching error in order to clean up logs
+                _, err = s.ChannelMessageSend(userChannel.ID, fmt.Sprintf("%s CODE: %s (%s)", strings.ToUpper(site), code[0], code[1]))
+            }
+        }
+
+        offset += 100
+    }
     close(errChan)
     return
 }
 
 func emitCodesToChannels(db *sql.DB, codes [][]string, s *discordgo.Session, errChan chan error, site string){
-    var selectStm string = fmt.Sprintf(`SELECT * from "%s";`, DB_NAME_CHANNELS)
-    rows, err := db.Query(selectStm)
+    var offset int = 0
+    for {
+        var selectStm string = fmt.Sprintf(`SELECT channel_id FROM "%s" LIMIT 100 OFFSET %d;`, DB_NAME_CHANNELS, offset)
+        rows, err := db.Query(selectStm)
 
-    if err != nil{
-        errChan <- err
-        return
-    }
-
-    defer rows.Close()
-
-    var idsArray []string
-    for rows.Next(){
-        var temp string
-        err = rows.Scan(&temp)
         if err != nil{
             errChan <- err
             return
         }
-        idsArray = append(idsArray, temp)
-    }
 
-    err = rows.Err()
+        defer rows.Close()
 
-    if err != nil{
-        errChan <- err
-        return
-    }
-
-    for _, id := range idsArray{
-        for _, code := range codes{
-            // catching error in order to clean up logs
-            _, err = s.ChannelMessageSend(id, fmt.Sprintf("%s CODE: %s (%s)", strings.ToUpper(site), code[0], code[1]))
+        var idsArray []string
+        for rows.Next(){
+            var temp string
+            err = rows.Scan(&temp)
+            if err != nil{
+                errChan <- err
+                return
+            }
+            idsArray = append(idsArray, temp)
         }
+
+        err = rows.Err()
+
+        if err != nil{
+            errChan <- err
+            return
+        }
+
+        if len(idsArray)==0{
+            break
+        }
+
+        for _, id := range idsArray{
+            for _, code := range codes{
+                // catching error in order to clean up logs
+                _, err = s.ChannelMessageSend(id, fmt.Sprintf("%s CODE: %s (%s)", strings.ToUpper(site), code[0], code[1]))
+            }
+        }
+
+        offset += 100
     }
 
     close(errChan)
