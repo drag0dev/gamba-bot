@@ -142,6 +142,10 @@ const Redirect = () =>{
 
             </div>
 
+            <div className='redirect-image'>
+                <img src='https://i.imgur.com/R8pwqnK.gif?noredirect'/>
+            </div>
+
         </div>
     );
 }

@@ -4,23 +4,40 @@ const Info = () => {
 
     return(
         <div className='info'>
-            <h2>
-               Currently supported: 
-            </h2>
+            
+            <div>
+
+                <h3>
+                    Currently supported: 
+                </h3>
+
+            </div>
 
             <div className='keydrop'>
-                <p>
-                    Keydrop
-                </p>
-                <img src='keydrop.png'/>
+
+                <div>
+                    <p>
+                        Keydrop
+                    </p>
+                </div>
+
+                <div>
+                    <img src='keydrop.png'/>
+                </div>
+
             </div>
 
             <div className='csgocases'>
-                <p>
-                    CSGOCases
-                </p>
 
-                <img src='csgocases.jpg' />
+                <div>
+                    <p>
+                        CSGOCases
+                    </p>
+                </div>
+
+                <div>
+                    <img src='csgocases.jpg' />
+                </div>
                 
             </div>
 

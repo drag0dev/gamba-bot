@@ -17,9 +17,9 @@ const Commands = () =>{
                     <h3>!subscribe</h3>
                 </div>
 
-                <div>
+                <div className='command-desc'>
                         <p>
-                            Command subscribes you to the bot, needs to be entered in a server where Gamba Bot is a member.
+                            subscribe to the bot 
                         </p>
                 </div>
 
@@ -31,9 +31,9 @@ const Commands = () =>{
                     <h3>!unsubscribe</h3>
                 </div>
 
-                <div>
+                <div className='command-desc'>
                         <p>
-                            Command unsubscribes you from the bot, needs to be entered in a server where Gamba Bot is a member.
+                            unsubscribe from the bot 
                         </p>
                 </div>
 
@@ -45,9 +45,9 @@ const Commands = () =>{
                     <h3>!bind</h3>
                 </div>
 
-                <div>
+                <div className='command-desc'>
                         <p>
-                            Command that binds bot to a channel that the command has been entered, all new codes will be sent to that channel. Needs to be entered in a server where Gamba Bot is a member.
+                            bind bot to a channel that the command has been entered in, all future codes will be sent to that channel
                         </p>
                 </div>
 
@@ -59,9 +59,9 @@ const Commands = () =>{
                     <h3>!unbind</h3>
                 </div>
 
-                <div>
+                <div className='command-desc'>
                         <p>
-                            Command that unbinds bot form a channel, needs to be entered in a server where Gamba Bot is a member.
+                            unbind bot from a channel
                         </p>
                 </div>
 
