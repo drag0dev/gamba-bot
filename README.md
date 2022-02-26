@@ -11,4 +11,4 @@ Gamba bot is a Discord bot that scrapes CS:GO gambling Twitter accounts for prom
 Currently only twitter is used for scraping and only CSGOcases and Keydrop.
 
 ## Usage
-Join the [discord server](https://discord.com/invite/BX2NzeG86r) and [click me](https://affectionate-lovelace-900e2f.netlify.app/) to subscribe and once there is a new promocode bot will send it to your DMs on Discord.
+Join the [discord server](https://discord.com/invite/bWQQnC9CCe) and [click me](https://affectionate-lovelace-900e2f.netlify.app/) to subscribe and once there is a new promocode bot will send it to your DMs on Discord.
