@@ -41,6 +41,8 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate){
         go handleBind(s, m)
     }else if m.Content == "!unbind"{
         go handleUnbind(s, m)
+    }else if m.Content == "!help"{
+        go handleHelp(s, m)
     }
 
 }
@@ -183,6 +185,16 @@ func handleUnbind(s *discordgo.Session, m *discordgo.MessageCreate){
         }
     }
 
+}
+
+func handleHelp(s *discordgo.Session, m *discordgo.MessageCreate){
+    var message string = "!subscribe - subscribe to gamba bot\n!unsubscribe - unsubscribe from gamba bot\n!bind - send future codes in a channel this was typed in\n!unbind - stop sending codes to the channel this was typed in"
+    _, err := s.ChannelMessageSend(m.ChannelID, message)
+
+    if err != nil{
+        log.Printf("Error sending help message: %s", err)
+        return
+    }
 }
 
 func main (){
