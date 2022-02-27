@@ -66,6 +66,20 @@ const Commands = () =>{
                 </div>
 
             </div>
+            
+            <div className='command'>
+
+                <div className='option-name'>
+                    <h3>!grab csgocases/keydrop</h3>
+                </div>
+
+                <div className='command-desc'>
+                        <p>
+                            get last 5 codes for a specified website in your DMs
+                        </p>
+                </div>
+
+            </div>
         
         </div>
     );

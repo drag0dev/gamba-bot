@@ -195,13 +195,25 @@ html{
         }
 
         .option-name{
+            @include displayFlex();
+            margin-right: 3vw;
             width: 25%;
-            text-align: center;
-        }
+            justify-content: right;
+        }  
     }
 
     .commands-header{
         justify-content: center;
+    }
+
+}
+
+.redirect-info{
+    @include displayFlex();
+    flex-wrap: wrap;
+    flex-direction: row;
+    div{
+        width: 100%;
     }
 
 }
@@ -236,6 +248,14 @@ html{
         img{
             width: 50vw;
             height: auto;
+        }
+    }
+
+    .redirect{
+        flex-wrap: wrap;
+        flex-direction: row;
+        div{
+            width: 100%
         }
     }
 
