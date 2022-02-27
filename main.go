@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"database/sql"
@@ -43,6 +44,8 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate){
         go handleUnbind(s, m)
     }else if m.Content == "!help"{
         go handleHelp(s, m)
+    }else if strings.HasPrefix(m.Content, "!grab"){ // get last 5 codes for a specific website
+        go handleGrab(s, m)
     }
 
 }
@@ -188,12 +191,97 @@ func handleUnbind(s *discordgo.Session, m *discordgo.MessageCreate){
 }
 
 func handleHelp(s *discordgo.Session, m *discordgo.MessageCreate){
-    var message string = "!subscribe - subscribe to gamba bot\n!unsubscribe - unsubscribe from gamba bot\n!bind - send future codes in a channel this was typed in\n!unbind - stop sending codes to the channel this was typed in"
+    var message string = "!subscribe - subscribe to gamba bot\n!unsubscribe - unsubscribe from gamba bot\n!bind - send future codes in a channel this was typed in\n!unbind - stop sending codes to the channel this was typed in\n!grab - csgocases/keydrop to get last 5 codes"
     _, err := s.ChannelMessageSend(m.ChannelID, message)
 
     if err != nil{
         log.Printf("Error sending help message: %s", err)
         return
+    }
+}
+
+func handleGrab(s *discordgo.Session, m *discordgo.MessageCreate){
+    userChannel, err := s.UserChannelCreate(m.Author.ID)
+    if err != nil{
+        log.Printf("Error encountered during channel creation handleGrab: %s", err)
+        _, err := s.ChannelMessageSend(m.ChannelID, "Internal server error, please try again!")
+        if err != nil{
+            log.Printf("Error encountered sending message grabHandle/channelCreation: %s", err)
+            return
+        }
+    }
+
+    var messageSplit []string = strings.Split(m.Content, " ")
+
+    if len(messageSplit) != 2 {
+        _, err := s.ChannelMessageSend(m.ChannelID, "Invalid command, please type the command correctly!")
+        if err != nil {
+            log.Printf("Error encountered sending message, handleGrab/messageSplit/err: %s", err)
+            return
+        }
+    }
+
+    var storeName string = strings.ToLower(messageSplit[1])
+
+    if storeName != "csgocases" && storeName != "keydrop"{
+        _, err := s.ChannelMessageSend(m.ChannelID, "Invalid website, please try a different one!")
+        if err != nil{
+            log.Printf("Error encountered sending message, handleGrab/invalid website: %s", err)
+        }
+    }else{
+        var selectStm string = fmt.Sprintf(`SELECT code, url FROM %s LIMIT 5`, storeName)
+
+        rows, err := db.Query(selectStm)
+
+        if err != nil{
+            log.Printf("Error encountered handleGrab/db query: %s", err)
+            _, err := s.ChannelMessageSend(m.ChannelID, "Internal serve error, please try again!")
+            if err != nil{
+                log.Printf("Error encountered sending message handleGrab/dq query: %s", err)
+                return
+            }
+            return
+        }
+
+        defer rows.Close()
+
+        var finalMessage strings.Builder
+
+        for rows.Next(){
+            var code string
+            var url string
+            err = rows.Scan(&code, &url)
+            finalMessage.WriteString(strings.ToUpper(storeName) + " CODE: " + code + " (" + url + ")" )
+        }
+
+        err = rows.Err()
+        if err != nil{
+            log.Printf("Error encountered scanning row grabHandle/after finish: %s", err)
+            _, err := s.ChannelMessageSend(m.ChannelID, "Internal server error please try again!")
+            if err != nil{
+                log.Printf("Error sending message grabHandle/after finish/row scan: %s", err)
+            }
+            return
+        }
+
+        if len(finalMessage.String()) == 0{
+            _, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Currently there is no codes for %s!", storeName))
+            if err != nil{
+                log.Printf("Error sending message no codes: %s", err)
+            }
+            return
+        }
+
+        _, err = s.ChannelMessageSend(userChannel.ID, finalMessage.String())
+        if err != nil{
+            log.Printf("Error sending message grabHandle/codes: %s", err)
+        }else{
+            _, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf(`%s check your DMs!`, m.Author.Username))
+            if err != nil{
+                log.Printf("Error sending message successfully grabbed: %s", err)
+            }
+        }
+
     }
 }
 
