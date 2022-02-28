@@ -34,17 +34,17 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate){
     if m.Author.ID == s.State.User.ID{
         return
     }
-    if m.Content == "!subscribe"{
+    if strings.HasPrefix(m.Content, "$subscribe"){
         go handleSubscribe(s, m)
-    }else if m.Content == "!unsubscribe"{
+    }else if strings.HasPrefix(m.Content, "$unsubscribe"){
         go handleUnsubscribe(s, m)
-    }else if m.Content == "!bind"{ // send codes in channel that this command has been typed in
+    }else if strings.HasPrefix(m.Content, "$bind"){
         go handleBind(s, m)
-    }else if m.Content == "!unbind"{
+    }else if strings.HasPrefix(m.Content, "$unbind"){
         go handleUnbind(s, m)
-    }else if m.Content == "!help"{
+    }else if strings.HasPrefix(m.Content, "$help"){
         go handleHelp(s, m)
-    }else if strings.HasPrefix(m.Content, "!grab"){ // get last 5 codes for a specific website
+    }else if strings.HasPrefix(m.Content, "$grab"){
         go handleGrab(s, m)
     }
 
@@ -191,7 +191,7 @@ func handleUnbind(s *discordgo.Session, m *discordgo.MessageCreate){
 }
 
 func handleHelp(s *discordgo.Session, m *discordgo.MessageCreate){
-    var message string = "!subscribe - subscribe to gamba bot\n!unsubscribe - unsubscribe from gamba bot\n!bind - send future codes in a channel this was typed in\n!unbind - stop sending codes to the channel this was typed in\n!grab - csgocases/keydrop to get last 5 codes"
+    var message string = "$subscribe - subscribe to gamba bot\n$unsubscribe - unsubscribe from gamba bot\n$bind - send future codes in a channel this was typed in\n$unbind - stop sending codes to the channel this was typed in\n$grab - csgocases/keydrop to get last 5 codes"
     _, err := s.ChannelMessageSend(m.ChannelID, message)
 
     if err != nil{

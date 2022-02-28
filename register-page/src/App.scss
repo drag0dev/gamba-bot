@@ -55,7 +55,7 @@ html{
     @include displayFlex();
     justify-content: space-around;
     background-color: $color_two;
-    min-height: 54vh;
+    height: 54vh;
     font-size: 1.7vw;
 
     .info{

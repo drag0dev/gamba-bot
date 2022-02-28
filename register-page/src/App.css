@@ -74,7 +74,7 @@ html {
   -ms-flex-pack: distribute;
       justify-content: space-around;
   background-color: #1A1B25;
-  min-height: 54vh;
+  height: 54vh;
   font-size: 1.7vw;
 }
 

@@ -14,7 +14,7 @@ const Commands = () =>{
             <div className='command'>
 
                 <div className='option-name'>
-                    <h3>!subscribe</h3>
+                    <h3>$subscribe</h3>
                 </div>
 
                 <div className='command-desc'>
@@ -28,7 +28,7 @@ const Commands = () =>{
             <div className='command'>
 
                 <div className='option-name'>
-                    <h3>!unsubscribe</h3>
+                    <h3>$unsubscribe</h3>
                 </div>
 
                 <div className='command-desc'>
@@ -42,7 +42,7 @@ const Commands = () =>{
             <div className='command'>
 
                 <div className='option-name'>
-                    <h3>!bind</h3>
+                    <h3>$bind</h3>
                 </div>
 
                 <div className='command-desc'>
@@ -56,7 +56,7 @@ const Commands = () =>{
             <div className='command'>
 
                 <div className='option-name'>
-                    <h3>!unbind</h3>
+                    <h3>$unbind</h3>
                 </div>
 
                 <div className='command-desc'>
@@ -70,7 +70,7 @@ const Commands = () =>{
             <div className='command'>
 
                 <div className='option-name'>
-                    <h3>!grab csgocases/keydrop</h3>
+                    <h3>$grab csgocases/keydrop</h3>
                 </div>
 
                 <div className='command-desc'>
