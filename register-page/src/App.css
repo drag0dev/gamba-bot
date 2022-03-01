@@ -311,8 +311,6 @@ html {
       -ms-flex-pack: center;
           justify-content: center;
   text-align: center;
-  -ms-flex-pack: distribute;
-      justify-content: space-around;
   text-align: center;
 }
 
@@ -321,7 +319,7 @@ html {
 }
 
 .commands .command .command-desc {
-  width: 75%;
+  width: 60%;
 }
 
 .commands .command .command-desc p {
@@ -340,16 +338,112 @@ html {
           justify-content: center;
   text-align: center;
   margin-right: 3vw;
-  width: 25%;
+  width: 20%;
   -webkit-box-pack: right;
       -ms-flex-pack: right;
           justify-content: right;
+}
+
+.commands .command .perm {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  width: 20%;
+  -webkit-box-pack: left;
+      -ms-flex-pack: left;
+          justify-content: left;
+}
+
+.commands .command .perm p {
+  text-align: left;
+  color: #36C6D9;
+  width: 100%;
 }
 
 .commands .commands-header {
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
+}
+
+.commands .small-header {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  width: 100%;
+}
+
+.commands .small-header .permissions-h {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  -webkit-box-pack: left;
+      -ms-flex-pack: left;
+          justify-content: left;
+  text-align: left;
+  color: #36C6D9;
+  width: 20%;
+  padding-left: 5vw;
+}
+
+.commands .small-header .command-h {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  -webkit-box-pack: right;
+      -ms-flex-pack: right;
+          justify-content: right;
+  color: #D36135;
+  width: 20%;
+}
+
+.commands .small-header .description-h {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  -webkit-box-pack: left;
+      -ms-flex-pack: left;
+          justify-content: left;
+  width: 60%;
+  padding-left: 2vw;
 }
 
 .redirect-info {
@@ -406,6 +500,9 @@ html {
   .redirect div {
     width: 100%;
   }
+  .commands p, .commands h1, .commands h2, .commands h3 {
+    font-size: 2.8vw;
+  }
 }
 
 @media screen and (max-width: 767px) and (min-width: 481px) {
@@ -424,6 +521,9 @@ html {
   .description img {
     width: 30vw;
     height: auto;
+  }
+  .commands p, .commands h1, .commands h2, .commands h3 {
+    font-size: 3vw;
   }
 }
 /*# sourceMappingURL=App.css.map */

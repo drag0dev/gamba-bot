@@ -2,6 +2,7 @@ $color_one: #D36135;
 $color_two: #1A1B25;
 $color_three: #F7F7FF;
 $color_four: #02020B;
+$color_five: #36C6D9;
 
 @mixin displayFlex {
     display: flex;
@@ -181,14 +182,13 @@ html{
     .command{
         width: 90%;
         @include displayFlex();
-        justify-content: space-around;
         text-align: center;
         h3{
             color: $color_one;
         }
         
         .command-desc{
-            width: 75%;
+            width: 60%;
             p{
                 text-align: left;
             }
@@ -197,13 +197,55 @@ html{
         .option-name{
             @include displayFlex();
             margin-right: 3vw;
-            width: 25%;
+            width: 20%;
             justify-content: right;
         }  
+    
+        .perm{
+            @include displayFlex();
+            width: 20%;
+            justify-content: left;
+            p{
+                text-align: left;
+                color: $color_five;
+                width: 100%;
+            }
+
+        }
+
     }
 
     .commands-header{
         justify-content: center;
+    }
+
+    .small-header{
+        @include displayFlex();
+        justify-content: space-between;
+        width: 100%;
+        .permissions-h{
+            @include displayFlex();
+            justify-content: left;
+            text-align: left;
+            color: $color_five;
+            width: 20%;
+            padding-left: 5vw;
+        }
+        .command-h{
+            @include displayFlex();
+            justify-content: right;
+            color: $color_one;
+            width: 20%
+        }
+
+        .description-h{
+            @include displayFlex();
+            justify-content: left;
+            width: 60%;
+            padding-left: 2vw;
+
+        }
+        
     }
 
 }
@@ -259,6 +301,13 @@ html{
         }
     }
 
+    .commands{
+        p, h1, h2, h3{
+            font-size: 2.8vw;
+        }
+    }
+
+
 }
 
 @media screen and (max-width: 767px) and (min-width: 481px){
@@ -288,6 +337,12 @@ html{
         img{
             width: 30vw;
             height: auto;
+        }
+    }
+    
+    .commands{
+        p, h1, h2, h3{
+            font-size: 3vw;
         }
     }
 }

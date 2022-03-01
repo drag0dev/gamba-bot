@@ -11,21 +11,48 @@ const Commands = () =>{
                 </h1>
             </div>
 
+            <div className='small-header'>
+                <h2 className='permissions-h'>
+                    permissions
+                </h2>
+
+                <h2 className='command-h'>
+                    command
+                </h2>
+
+                <h2 className='description-h'>
+                    description
+                </h2>
+
+            </div>
+
             <div className='command'>
+
+                <div className='perm'>
+                    <p>
+                        none 
+                    </p>
+                </div>
 
                 <div className='option-name'>
                     <h3>$subscribe</h3>
                 </div>
 
                 <div className='command-desc'>
-                        <p>
-                            subscribe to the bot 
-                        </p>
+                    <p>
+                        subscribe to the bot 
+                    </p>
                 </div>
 
             </div>
 
             <div className='command'>
+
+                <div className='perm'>
+                    <p>
+                        none 
+                    </p>
+                </div>
 
                 <div className='option-name'>
                     <h3>$unsubscribe</h3>
@@ -40,6 +67,12 @@ const Commands = () =>{
             </div>
 
             <div className='command'>
+                
+                <div className='perm'>
+                    <p>
+                        admin or manage server 
+                    </p>
+                </div>
 
                 <div className='option-name'>
                     <h3>$bind</h3>
@@ -55,6 +88,12 @@ const Commands = () =>{
 
             <div className='command'>
 
+                <div className='perm'>
+                    <p>
+                        admin or manage server 
+                    </p>
+                </div>
+
                 <div className='option-name'>
                     <h3>$unbind</h3>
                 </div>
@@ -68,6 +107,12 @@ const Commands = () =>{
             </div>
             
             <div className='command'>
+
+                <div className='perm'>
+                    <p>
+                        none 
+                    </p>
+                </div>
 
                 <div className='option-name'>
                     <h3>$grab csgocases/keydrop</h3>
