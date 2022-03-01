@@ -118,6 +118,62 @@ func handleBind(s *discordgo.Session, m *discordgo.MessageCreate){
     var existsStm string = fmt.Sprintf(`SELECT EXISTS (SELECT 1 FROM %s WHERE channel_id='%s');`, DB_NAME_CHANNELS, m.ChannelID)
     var exists bool
 
+    // role testing
+    member, err := s.State.Member(m.GuildID, m.Author.ID)
+    if err != nil{
+        var err2 error
+        member, err2 = s.GuildMember(m.GuildID, m.Author.ID)
+
+        if err2 != nil{
+            log.Printf("Error encountered while getting state of the member: %s", err2)
+            _, err3:= s.ChannelMessageSend(m.ChannelID, "Internal server error, please try again!")
+            if err3 != nil{
+             log.Printf("Error sending message handleBind/state member: %s", err3)
+            }
+            return
+        }
+    }
+
+    guild, err := s.Guild(m.GuildID)
+    if err != nil{
+        log.Printf("Error encountered while getting guild: %s", err)
+        _, err:= s.ChannelMessageSend(m.ChannelID, "Internal server error, please try again!")
+        if err != nil{
+         log.Printf("Error sending message handleBind/state member: %s", err)
+        }
+        return
+
+    }
+
+    // s.State.Member(guildId, userID) doesn't work for some reason
+    // check if the user role has permissions to manage server or is an admin
+
+    // this is seems to be required
+    s.RLock()
+
+    var admin bool
+    for _, roleID := range member.Roles{
+        for _, guildRole := range guild.Roles{
+            if guildRole.ID == roleID{
+                if guildRole.Permissions&discordgo.PermissionManageServer != 0 || guildRole.Permissions&discordgo.PermissionAdministrator !=0{
+                    admin = true
+                    break
+                }
+            }
+        }
+    }
+
+    s.RUnlock()
+
+    // if the user is not admin
+    if !admin{
+        _, err := s.ChannelMessageSend(m.ChannelID, "Only admins have permission to bind a channel!")
+        if err != nil{
+            log.Printf("Error sending message handleBind/user not admin: %s", err)
+        }
+        return
+    }
+
     _ = db.QueryRow(existsStm).Scan(&exists)
 
     if !exists{
@@ -156,6 +212,62 @@ func handleBind(s *discordgo.Session, m *discordgo.MessageCreate){
 func handleUnbind(s *discordgo.Session, m *discordgo.MessageCreate){
     var existsStm string = fmt.Sprintf(`SELECT EXISTS (SELECT 1 FROM %s WHERE channel_id='%s');`, DB_NAME_CHANNELS, m.ChannelID)
     var exists bool
+
+    // role testing
+    member, err := s.State.Member(m.GuildID, m.Author.ID)
+    if err != nil{
+        var err2 error
+        member, err2 = s.GuildMember(m.GuildID, m.Author.ID)
+
+        if err2 != nil{
+            log.Printf("Error encountered while getting state of the member: %s", err2)
+            _, err3:= s.ChannelMessageSend(m.ChannelID, "Internal server error, please try again!")
+            if err3 != nil{
+             log.Printf("Error sending message handleBind/state member: %s", err3)
+            }
+            return
+        }
+    }
+
+    guild, err := s.Guild(m.GuildID)
+    if err != nil{
+        log.Printf("Error encountered while getting guild: %s", err)
+        _, err:= s.ChannelMessageSend(m.ChannelID, "Internal server error, please try again!")
+        if err != nil{
+         log.Printf("Error sending message handleBind/state member: %s", err)
+        }
+        return
+
+    }
+
+    // s.State.Member(guildId, userID) doesn't work for some reason
+    // check if the user role has permissions to manage server or is an admin
+
+    // this is seems to be required
+    s.RLock()
+
+    var admin bool
+    for _, roleID := range member.Roles{
+        for _, guildRole := range guild.Roles{
+            if guildRole.ID == roleID{
+                if guildRole.Permissions&discordgo.PermissionManageServer != 0 || guildRole.Permissions&discordgo.PermissionAdministrator !=0{
+                    admin = true
+                    break
+                }
+            }
+        }
+    }
+
+    s.RUnlock()
+
+    // if the user is not admin
+    if !admin{
+        _, err := s.ChannelMessageSend(m.ChannelID, "Only admins have permission to unbind a channel!")
+        if err != nil{
+            log.Printf("Error sending message handleBind/user not admin: %s", err)
+        }
+        return
+    }
 
     _ = db.QueryRow(existsStm).Scan(&exists)
     if exists{
@@ -312,6 +424,7 @@ func main (){
 
     go conScraping.StartScraping(db, dgSession, "csgocases")
     go conScraping.StartScraping(db, dgSession, "keydrop")
+
 
     log.Printf(`Now running. Press CTRL-C to exit.`)
     sc := make(chan os.Signal, 1)
