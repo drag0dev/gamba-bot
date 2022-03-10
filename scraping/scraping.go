@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"unicode"
 
 	_ "github.com/lib/pq"
 )
@@ -88,7 +89,36 @@ func getlastOldestId(db *sql.DB, website string) (error, string) {
     }
 }
 
-func getCodes(tweets []string) (error, [][]string){
+func keyDropCode(parsedImg []string)(string){
+    // keydrop changes how their image looks like every so often
+    // easiest way to grab it from the parsed image is to find alnumeric string
+    var code string = ""
+    for _, piece := range parsedImg{
+        // check if string alnum
+        var num, letter bool
+
+        for _, char := range piece{
+            if unicode.IsDigit(char){
+                num = true
+            }else if unicode.IsLetter(char){
+                letter = true
+            }
+
+            if num && letter{
+                break
+            }
+        }
+
+        if num && letter{
+            code = piece
+            break
+        }
+
+    }
+    return code
+}
+
+func getCodes(tweets []string, website string) (error, [][]string){
     var imageURLs []string
     var codes [][]string
 
@@ -150,11 +180,15 @@ func getCodes(tweets []string) (error, [][]string){
         }
 
         var parsedCode string = ocrResponse.ParsedResults[0].ParsedText
+        splitParsedCode := strings.Split(parsedCode, "\r\n")
         var code string = ""
 
-        splitParsedCode := strings.Split(parsedCode, "\r\n")
-        if len(splitParsedCode[2]) > 0{
-            code = splitParsedCode[2]
+        if website == "keydrop"{
+            code = keyDropCode(splitParsedCode)
+        }else if website == "csgocases"{
+            if len(splitParsedCode)>=3 && len(splitParsedCode[2]) > 0{
+                code = splitParsedCode[2]
+            }
         }
 
         temp := []string{code, url}
@@ -283,7 +317,7 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
         return
     }
 
-    err, codes := getCodes(tweetsIds)
+    err, codes := getCodes(tweetsIds, site)
 
     if err != nil {
         log.Printf(`"%s", Error getting codes: %s`, site, err)
