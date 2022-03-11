@@ -61,6 +61,8 @@ func exists(w http.ResponseWriter, r *http.Request){
         return
     }
 
+    r.Body.Close()
+
     var suppliedId reqId
 
     err = json.Unmarshal([]byte(reqBody), &suppliedId)
@@ -119,6 +121,8 @@ func subscribe(w http.ResponseWriter, r *http.Request){
         w.WriteHeader(http.StatusInternalServerError)
         return
     }
+
+    r.Body.Close()
 
     var suppliedIdJSON reqId
     err = json.Unmarshal([]byte(reqBody), &suppliedIdJSON)
@@ -189,6 +193,8 @@ func unsubscribe(w http.ResponseWriter, r *http.Request){
         w.WriteHeader(http.StatusInternalServerError)
         return
     }
+
+    r.Body.Close()
 
     var suppliedIdJSON reqId
     err = json.Unmarshal([]byte(reqBody), &suppliedIdJSON)
