@@ -221,10 +221,10 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     err, oldNewestId  := getlastOldestId(db, site)
 
     if err != nil{
+        done <- true
         errChan <- err
         close(codesChan)
         close(newestIdChan)
-        done <- true
         return
     }
 
@@ -243,10 +243,10 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
 
     req, err := http.NewRequest("get", url, nil)
     if err != nil{
+        done <- true
         errChan <- err
         close(codesChan)
         close(newestIdChan)
-        done <- true
         return
     }
 
@@ -255,10 +255,10 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     res, err := client.Do(req)
     if err != nil{
         log.Printf(`"%s", Failed to fetch %s, error: %s\n`,site, site, err)
+        done <- true
         errChan <- err
         close(codesChan)
         close(newestIdChan)
-        done <- true
         return
     }
 
@@ -266,10 +266,10 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
 
     if err != nil{
         log.Printf(`"%s", Failed to parse body, error: %s\n`, site, err)
+        done <- true
         errChan <- err
         close(codesChan)
         close(newestIdChan)
-        done <- true
         return
     }
 
@@ -277,19 +277,19 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
 
     err = json.Unmarshal([]byte(body), &resJSON)
     if err!=nil{
+        done <- true
         errChan <- err
         close(codesChan)
         close(newestIdChan)
-        done <- true
         return
     }
 
     // no new tweets
     if resJSON.Meta.Newest_id <= oldNewestId{
+        done <- true
         close(errChan)
         close(codesChan)
         close(newestIdChan)
-        done <- true
         return
     }
 
@@ -310,10 +310,10 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
     }
 
     if len(tweetsIds)==0{
+        done <- true
         close(errChan)
         close(codesChan)
         close(newestIdChan)
-        done <- true
         return
     }
 
@@ -321,10 +321,10 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
 
     if err != nil {
         log.Printf(`"%s", Error getting codes: %s`, site, err)
+        done <- true
         errChan <- err
         close(codesChan)
         close(newestIdChan)
-        done <- true
         return
     }
 
@@ -332,15 +332,15 @@ func Scrape(db *sql.DB, errChan chan error, codesChan chan [][]string, done chan
 
     if err!=nil{
         log.Printf(`"%s", Erorr adding new codes to the db: %s`, site, err)
+        done <- true
         errChan <- err
         close(codesChan)
         close(newestIdChan)
-        done <- true
         return
     }
 
-    close(errChan)
     done <- true
+    close(errChan)
     codesChan <- codes
     newestIdChan <- resJSON.Meta.Newest_id
     return
