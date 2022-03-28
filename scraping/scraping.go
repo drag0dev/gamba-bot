@@ -179,15 +179,20 @@ func getCodes(tweets []string, website string) (error, [][]string){
             continue
         }
 
-        var parsedCode string = ocrResponse.ParsedResults[0].ParsedText
-        splitParsedCode := strings.Split(parsedCode, "\r\n")
         var code string = ""
-
-        if website == "keydrop"{
-            code = keyDropCode(splitParsedCode)
-        }else if website == "csgocases"{
-            if len(splitParsedCode)>=3 && len(splitParsedCode[2]) > 0{
-                code = splitParsedCode[2]
+        if len(ocrResponse.ParsedResults)==0{
+            // sometimes ocr just doesnt work, or it cant find any text
+            log.Println("Parsed results length is 0, ocrResponse:", )
+            log.Println(ocrResponse)
+        }else{
+            var parsedCode string = ocrResponse.ParsedResults[0].ParsedText
+            splitParsedCode := strings.Split(parsedCode, "\r\n")
+            if website == "keydrop"{
+                code = keyDropCode(splitParsedCode)
+            }else if website == "csgocases"{
+                if len(splitParsedCode)>=3 && len(splitParsedCode[2]) > 0{
+                    code = splitParsedCode[2]
+                }
             }
         }
 
